@@ -1,0 +1,26 @@
+name: observability-dashboards
+description: "Create Grafana dashboard JSON configs for golden signals monitoring (latency, traffic, errors, saturation), SLO tracking with burn-rate alerts, and service dependency visualization. Include PromQL queries optimized for cardinality and query performance"
+agent: observability
+inputs:
+  - name: service_name
+    type: string
+    required: true
+  - name: slo_targets
+    type: string
+    required: false
+  - name: datasource
+    type: string
+    required: false
+    default: prometheus
+outputs:
+  - name: dashboard_json
+    type: string
+  - name: alert_rules
+    type: string
+  - name: recording_rules
+    type: string
+dependencies: []
+timeout: 20m
+retry:
+  max_attempts: 2
+  backoff: fixed

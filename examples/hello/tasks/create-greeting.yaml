@@ -1,0 +1,18 @@
+# Task to create a personalized greeting
+name: create-greeting
+description: Create a warm, personalized greeting for someone
+agent: greeter
+inputs:
+  - name: name
+    type: string
+    required: true
+  - name: occasion
+    type: string
+    required: false
+outputs:
+  - name: greeting
+    type: string
+timeout: 5m
+retry:
+  max_attempts: 2
+  backoff: fixed

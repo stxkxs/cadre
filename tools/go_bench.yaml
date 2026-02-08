@@ -1,0 +1,8 @@
+name: go_bench
+description: Run Go benchmarks with memory allocation stats to measure function performance and allocation pressure
+provider: exec
+capabilities:
+  - benchmarking
+  - go
+config:
+  command: "go test -bench=. -benchmem {{input}}"

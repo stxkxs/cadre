@@ -1,0 +1,8 @@
+name: go_vet
+description: Run Go vet to detect suspicious constructs, incorrect printf calls, and common mistakes in Go code
+provider: exec
+capabilities:
+  - static-analysis
+  - go
+config:
+  command: "go vet {{input}}"

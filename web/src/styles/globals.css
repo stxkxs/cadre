@@ -1,0 +1,251 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-header: 'Geist Variable', 'Geist', system-ui, -apple-system, sans-serif;
+  --font-brand: 'Geist Variable', 'Geist', system-ui, -apple-system, sans-serif;
+  --font-primary: 'Geist Variable', 'Geist', system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', 'Geist Mono', monospace;
+  --radius: 0.625rem;
+  --background: oklch(0.98 0.005 75);
+  --foreground: oklch(0.17 0.005 60);
+  --card: oklch(0.995 0.003 75);
+  --card-foreground: oklch(0.17 0.005 60);
+  --popover: oklch(0.995 0.003 75);
+  --popover-foreground: oklch(0.17 0.005 60);
+  --primary: oklch(0.22 0.005 60);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.955 0.005 75);
+  --secondary-foreground: oklch(0.22 0.005 60);
+  --muted: oklch(0.955 0.005 75);
+  --muted-foreground: oklch(0.50 0.01 60);
+  --accent: oklch(0.955 0.005 75);
+  --accent-foreground: oklch(0.22 0.005 60);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.90 0.005 75);
+  --input: oklch(0.90 0.005 75);
+  --ring: oklch(0.65 0.01 60);
+  --chart-1: oklch(0.75 0.18 75);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+}
+
+.dark {
+  --background: oklch(0.13 0.005 60);
+  --foreground: oklch(0.93 0.005 75);
+  --card: oklch(0.17 0.005 60);
+  --card-foreground: oklch(0.93 0.005 75);
+  --popover: oklch(0.17 0.005 60);
+  --popover-foreground: oklch(0.93 0.005 75);
+  --primary: oklch(0.90 0.005 75);
+  --primary-foreground: oklch(0.17 0.005 60);
+  --secondary: oklch(0.22 0.005 60);
+  --secondary-foreground: oklch(0.90 0.005 75);
+  --muted: oklch(0.22 0.005 60);
+  --muted-foreground: oklch(0.55 0.01 60);
+  --accent: oklch(0.22 0.005 60);
+  --accent-foreground: oklch(0.90 0.005 75);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.55 0.01 60);
+  --chart-1: oklch(0.75 0.18 75);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+}
+
+/* Accent color themes */
+:root {
+  --accent-amber: oklch(0.75 0.18 75);
+  --accent-blue: oklch(0.588 0.158 241.966);
+  --accent-purple: oklch(0.558 0.288 302.321);
+  --accent-green: oklch(0.627 0.194 149.214);
+  --accent-orange: oklch(0.705 0.213 47.604);
+  --accent-rose: oklch(0.645 0.246 16.439);
+  --accent-cyan: oklch(0.685 0.169 201.956);
+  --primary-accent: var(--accent-amber);
+}
+
+.dark {
+  --accent-amber: oklch(0.80 0.16 75);
+  --accent-blue: oklch(0.707 0.165 254.624);
+  --accent-purple: oklch(0.714 0.203 305.504);
+  --accent-green: oklch(0.723 0.219 149.579);
+  --accent-orange: oklch(0.792 0.195 60.017);
+  --accent-rose: oklch(0.712 0.194 13.428);
+  --accent-cyan: oklch(0.789 0.154 211.53);
+}
+
+/* Color theme selectors - light mode */
+html[data-color-theme="amber"] { --primary-accent: oklch(0.75 0.18 75); }
+html[data-color-theme="rose"] { --primary-accent: oklch(0.645 0.246 16.439); }
+html[data-color-theme="blue"] { --primary-accent: oklch(0.588 0.158 241.966); }
+html[data-color-theme="purple"] { --primary-accent: oklch(0.558 0.288 302.321); }
+html[data-color-theme="green"] { --primary-accent: oklch(0.627 0.194 149.214); }
+html[data-color-theme="orange"] { --primary-accent: oklch(0.705 0.213 47.604); }
+html[data-color-theme="cyan"] { --primary-accent: oklch(0.685 0.169 201.956); }
+
+/* Color theme selectors - dark mode */
+html.dark[data-color-theme="amber"] { --primary-accent: oklch(0.80 0.16 75); }
+html.dark[data-color-theme="rose"] { --primary-accent: oklch(0.712 0.194 13.428); }
+html.dark[data-color-theme="blue"] { --primary-accent: oklch(0.707 0.165 254.624); }
+html.dark[data-color-theme="purple"] { --primary-accent: oklch(0.714 0.203 305.504); }
+html.dark[data-color-theme="green"] { --primary-accent: oklch(0.723 0.219 149.579); }
+html.dark[data-color-theme="orange"] { --primary-accent: oklch(0.792 0.195 60.017); }
+html.dark[data-color-theme="cyan"] { --primary-accent: oklch(0.789 0.154 211.53); }
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-primary;
+    overflow-x: clip;
+  }
+  html {
+    scroll-behavior: smooth;
+    overflow-x: clip;
+  }
+
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--primary-accent);
+  }
+
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--primary-accent), 0 0 12px oklch(0.75 0.18 75 / 15%);
+    border-radius: 2px;
+  }
+}
+
+/* Noise texture overlay */
+.noise::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+.dark .noise::before {
+  opacity: 0.035;
+}
+
+/* Glass effect */
+.glass {
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: oklch(0.5 0.01 60 / 20%);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.5 0.01 60 / 35%);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: oklch(1 0 0 / 10%);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: oklch(1 0 0 / 20%);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.5 0.01 60 / 20%) transparent;
+}
+
+.dark * {
+  scrollbar-color: oklch(1 0 0 / 10%) transparent;
+}
+
+::selection {
+  background: oklch(0.75 0.18 75 / 20%);
+  color: oklch(0.75 0.18 75);
+}
+
+.dark ::selection {
+  background: oklch(0.80 0.16 75 / 20%);
+  color: oklch(0.80 0.16 75);
+}
+
+/* Animations */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px var(--primary-accent), 0 0 0 1px var(--primary-accent); }
+  50% { box-shadow: 0 0 16px var(--primary-accent), 0 0 0 1px var(--primary-accent); }
+}
+
+.animate-page-in {
+  animation: page-in 0.3s ease-out forwards;
+}
+
+.animate-glow {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-in,
+  .animate-glow {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* React Flow overrides for dark mode */
+.dark .react-flow__background {
+  background-color: var(--background);
+}
+
+.dark .react-flow__minimap {
+  background-color: var(--card);
+}
+
+.dark .react-flow__controls button {
+  background-color: var(--card);
+  border-color: var(--border);
+  color: var(--foreground);
+}
+
+.dark .react-flow__controls button:hover {
+  background-color: var(--accent);
+}

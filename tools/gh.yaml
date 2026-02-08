@@ -1,0 +1,8 @@
+name: gh
+description: Run GitHub CLI commands to manage pull requests, issues, releases, actions, and repository settings
+provider: exec
+capabilities:
+  - github
+  - collaboration
+config:
+  command: "gh {{input}}"

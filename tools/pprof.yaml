@@ -1,0 +1,8 @@
+name: pprof
+description: Analyze Go performance profiles (CPU, memory, goroutine, block, mutex) to identify hotspots and optimization targets
+provider: exec
+capabilities:
+  - profiling
+  - go
+config:
+  command: "go tool pprof {{input}}"

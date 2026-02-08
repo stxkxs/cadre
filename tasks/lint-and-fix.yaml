@@ -1,0 +1,27 @@
+name: lint-and-fix
+description: "Run golangci-lint with the project's configuration, auto-fix violations where possible, verify remaining issues with go vet and staticcheck, and produce a categorized report of findings grouped by severity and rule"
+agent: go-developer
+inputs:
+  - name: packages
+    type: string
+    required: true
+  - name: config_path
+    type: string
+    required: false
+    default: .golangci.yml
+  - name: auto_fix
+    type: string
+    required: false
+    default: "true"
+outputs:
+  - name: lint_report
+    type: string
+  - name: files_fixed
+    type: string[]
+  - name: remaining_issues
+    type: string
+dependencies: []
+timeout: 15m
+retry:
+  max_attempts: 2
+  backoff: fixed

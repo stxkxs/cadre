@@ -1,0 +1,8 @@
+name: semgrep
+description: Run Semgrep for static analysis with custom rules to find security vulnerabilities, anti-patterns, and code quality issues
+provider: exec
+capabilities:
+  - security-scanning
+  - static-analysis
+config:
+  command: "semgrep {{input}}"

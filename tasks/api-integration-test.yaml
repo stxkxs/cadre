@@ -1,0 +1,26 @@
+name: api-integration-test
+description: "Write integration tests for API endpoints — cover happy paths, error scenarios, edge cases, authentication/authorization flows, rate limiting, and concurrent access patterns. Generate test fixtures and validate response schemas against OpenAPI spec"
+agent: qa
+inputs:
+  - name: api_spec
+    type: string
+    required: true
+  - name: base_url
+    type: string
+    required: false
+    default: http://localhost:8080
+  - name: auth_config
+    type: string
+    required: false
+outputs:
+  - name: test_files
+    type: string[]
+  - name: coverage_report
+    type: string
+  - name: test_fixtures
+    type: string
+dependencies: []
+timeout: 25m
+retry:
+  max_attempts: 3
+  backoff: exponential

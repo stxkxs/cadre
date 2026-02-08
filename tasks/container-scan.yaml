@@ -1,0 +1,25 @@
+name: container-scan
+description: "Scan Docker images and Infrastructure-as-Code configs for vulnerabilities — run Trivy/Grype for CVE detection, check Dockerfiles for best-practice violations, scan Kubernetes manifests for misconfigurations, and produce a prioritized findings report with CVSS scores"
+agent: security-reviewer
+inputs:
+  - name: image_refs
+    type: string[]
+    required: true
+  - name: dockerfile_paths
+    type: string[]
+    required: false
+  - name: manifest_paths
+    type: string[]
+    required: false
+outputs:
+  - name: cve_report
+    type: string
+  - name: misconfig_report
+    type: string
+  - name: remediation_steps
+    type: string
+dependencies: []
+timeout: 20m
+retry:
+  max_attempts: 2
+  backoff: exponential

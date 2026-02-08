@@ -1,0 +1,8 @@
+name: psql
+description: Run PostgreSQL interactive terminal to execute SQL queries, inspect schemas, manage databases, and analyze query plans
+provider: exec
+capabilities:
+  - database
+  - sql
+config:
+  command: "psql {{input}}"

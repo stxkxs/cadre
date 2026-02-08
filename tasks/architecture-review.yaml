@@ -1,0 +1,25 @@
+name: architecture-review
+description: "Review system architecture against quality attributes — evaluate scalability, reliability, security, and maintainability. Analyze component coupling, identify single points of failure, assess data flow patterns, and produce an Architecture Decision Record (ADR) with findings and recommendations"
+agent: architect
+inputs:
+  - name: system_description
+    type: string
+    required: true
+  - name: quality_attributes
+    type: string[]
+    required: false
+  - name: existing_adrs
+    type: string
+    required: false
+outputs:
+  - name: findings_report
+    type: string
+  - name: adr_document
+    type: string
+  - name: risk_register
+    type: string
+dependencies: []
+timeout: 25m
+retry:
+  max_attempts: 2
+  backoff: fixed

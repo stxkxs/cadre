@@ -1,0 +1,7 @@
+name: git
+description: Run Git commands to manage version control — commits, branches, diffs, logs, merges, and repository operations
+provider: exec
+capabilities:
+  - version-control
+config:
+  command: "git {{input}}"

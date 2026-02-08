@@ -1,0 +1,20 @@
+name: setup-observability
+description: "Instrument code with OpenTelemetry — add distributed tracing spans for key operations, export Prometheus metrics for RED signals (rate, errors, duration), configure structured logging with correlation IDs, and generate Grafana dashboard configs"
+agent: observability
+inputs:
+  - name: service_name
+    type: string
+    required: true
+  - name: files_changed
+    type: string[]
+    required: false
+outputs:
+  - name: instrumented_files
+    type: string[]
+  - name: dashboard_config
+    type: string
+dependencies: []
+timeout: 20m
+retry:
+  max_attempts: 2
+  backoff: fixed

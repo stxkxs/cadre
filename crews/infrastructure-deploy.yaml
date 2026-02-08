@@ -1,0 +1,29 @@
+name: infrastructure-deploy
+description: "Infrastructure change pipeline — synthesize CDK stack, review architecture and security implications, deploy via Helm, then set up observability dashboards to monitor the new infrastructure"
+agents:
+  - platform-engineer
+  - architect
+  - security-reviewer
+  - devops
+  - observability
+process: sequential
+tasks:
+  - name: cdk-synth
+    agent: platform-engineer
+  - name: architecture-review
+    agent: architect
+    depends_on:
+      - cdk-synth
+  - name: security-review
+    agent: security-reviewer
+    depends_on:
+      - cdk-synth
+  - name: deploy-helm
+    agent: devops
+    depends_on:
+      - architecture-review
+      - security-review
+  - name: observability-dashboards
+    agent: observability
+    depends_on:
+      - deploy-helm

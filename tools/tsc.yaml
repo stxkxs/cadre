@@ -1,0 +1,8 @@
+name: tsc
+description: Run the TypeScript compiler to type-check code, emit declarations, and diagnose type errors
+provider: exec
+capabilities:
+  - type-checking
+  - frontend
+config:
+  command: "npx tsc {{input}}"

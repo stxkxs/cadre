@@ -1,0 +1,8 @@
+name: kubectl
+description: Run kubectl commands to interact with Kubernetes clusters — manage pods, deployments, services, configmaps, secrets, and custom resources
+provider: exec
+capabilities:
+  - kubernetes
+  - cluster-management
+config:
+  command: "kubectl {{input}}"

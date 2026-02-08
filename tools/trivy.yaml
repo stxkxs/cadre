@@ -1,0 +1,8 @@
+name: trivy
+description: Run Trivy to scan container images, filesystems, and IaC configs for vulnerabilities, misconfigurations, and exposed secrets
+provider: exec
+capabilities:
+  - security-scanning
+  - vulnerability-detection
+config:
+  command: "trivy {{input}}"

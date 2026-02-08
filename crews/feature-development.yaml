@@ -1,0 +1,25 @@
+name: feature-development
+description: "Standard feature development pipeline — implement the feature in Go, then fan out to testing, security review, and documentation in parallel. Uses complete-running error strategy so all post-implementation tasks finish even if one fails"
+agents:
+  - go-developer
+  - qa
+  - security-reviewer
+  - tech-writer
+process: parallel
+concurrency: 3
+error_strategy: complete-running
+tasks:
+  - name: implement-feature
+    agent: go-developer
+  - name: write-tests
+    agent: qa
+    depends_on:
+      - implement-feature
+  - name: security-review
+    agent: security-reviewer
+    depends_on:
+      - implement-feature
+  - name: write-docs
+    agent: tech-writer
+    depends_on:
+      - implement-feature

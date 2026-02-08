@@ -1,0 +1,20 @@
+name: design-crd
+description: "Design a Kubernetes Custom Resource Definition — define the API group, version, spec, and status subresources with comprehensive validation rules, printer columns for kubectl output, and conversion webhooks for multi-version support"
+agent: k8s-crd
+inputs:
+  - name: resource_name
+    type: string
+    required: true
+  - name: requirements
+    type: string
+    required: true
+outputs:
+  - name: crd_yaml
+    type: string
+  - name: types_go
+    type: string
+dependencies: []
+timeout: 15m
+retry:
+  max_attempts: 2
+  backoff: exponential

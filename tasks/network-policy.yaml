@@ -1,0 +1,26 @@
+name: network-policy
+description: "Design Kubernetes NetworkPolicies for zero-trust microsegmentation — analyze service communication patterns, define ingress/egress rules per namespace, generate Cilium or Calico policies, and validate that no required traffic paths are blocked"
+agent: networking
+inputs:
+  - name: service_map
+    type: string
+    required: true
+  - name: namespaces
+    type: string[]
+    required: true
+  - name: policy_engine
+    type: string
+    required: false
+    default: cilium
+outputs:
+  - name: network_policies
+    type: string
+  - name: traffic_matrix
+    type: string
+  - name: validation_report
+    type: string
+dependencies: []
+timeout: 20m
+retry:
+  max_attempts: 2
+  backoff: exponential

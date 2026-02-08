@@ -1,0 +1,18 @@
+name: security-review
+description: "Review code for security vulnerabilities — check for injection flaws, broken authentication, sensitive data exposure, misconfigurations, and OWASP Top 10 issues. Classify findings by CVSS severity and provide specific remediation guidance with code examples"
+agent: security-reviewer
+inputs:
+  - name: files_changed
+    type: string[]
+    required: true
+outputs:
+  - name: findings
+    type: string
+  - name: severity
+    type: string
+dependencies:
+  - implement-feature
+timeout: 15m
+retry:
+  max_attempts: 2
+  backoff: fixed

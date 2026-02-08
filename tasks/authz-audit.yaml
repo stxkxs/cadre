@@ -1,0 +1,25 @@
+name: authz-audit
+description: "Audit authorization policies across the stack — review Kubernetes RBAC bindings, IAM policies, OPA/Rego rules, and application-level access controls. Identify over-privileged roles, unused permissions, and policy conflicts. Produce a findings report with remediation priorities"
+agent: authz
+inputs:
+  - name: scope
+    type: string
+    required: true
+  - name: rbac_manifests
+    type: string
+    required: false
+  - name: iam_policies
+    type: string
+    required: false
+outputs:
+  - name: findings_report
+    type: string
+  - name: risk_matrix
+    type: string
+  - name: remediation_plan
+    type: string
+dependencies: []
+timeout: 20m
+retry:
+  max_attempts: 2
+  backoff: fixed

@@ -1,0 +1,18 @@
+name: database-evolution
+description: "End-to-end database evolution pipeline — design migration, implement schema changes, write integration tests to validate data integrity, then deploy with automated rollback capability"
+agents:
+  - database
+  - qa
+  - devops
+process: sequential
+tasks:
+  - name: database-migration
+    agent: database
+  - name: api-integration-test
+    agent: qa
+    depends_on:
+      - database-migration
+  - name: deploy-helm
+    agent: devops
+    depends_on:
+      - api-integration-test

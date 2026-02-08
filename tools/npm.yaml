@@ -1,0 +1,8 @@
+name: npm
+description: Run npm commands to install dependencies, run scripts, audit packages, and manage the frontend build lifecycle
+provider: exec
+capabilities:
+  - package-management
+  - frontend
+config:
+  command: "npm {{input}}"

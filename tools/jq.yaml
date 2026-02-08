@@ -1,0 +1,8 @@
+name: jq
+description: Process and transform JSON data — filter, map, select, and format JSON from APIs, logs, and config files
+provider: exec
+capabilities:
+  - json-processing
+  - data-transformation
+config:
+  command: "echo '{{input}}' | jq ."

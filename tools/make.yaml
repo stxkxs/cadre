@@ -1,0 +1,8 @@
+name: make
+description: Run Make targets to execute build, test, lint, and deployment workflows defined in Makefiles
+provider: exec
+capabilities:
+  - build
+  - automation
+config:
+  command: "make {{input}}"

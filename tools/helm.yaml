@@ -1,0 +1,8 @@
+name: helm
+description: Run Helm commands to manage Kubernetes packages — install, upgrade, rollback, and template charts
+provider: exec
+capabilities:
+  - kubernetes
+  - package-management
+config:
+  command: "helm {{input}}"

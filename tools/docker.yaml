@@ -1,0 +1,8 @@
+name: docker
+description: Run Docker commands to build images, manage containers, inspect layers, and work with registries
+provider: exec
+capabilities:
+  - containers
+  - image-building
+config:
+  command: "docker {{input}}"

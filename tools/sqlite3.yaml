@@ -1,0 +1,8 @@
+name: sqlite3
+description: Run SQLite3 CLI to query databases, inspect schemas, run migrations, and manage embedded database files
+provider: exec
+capabilities:
+  - database
+  - sql
+config:
+  command: "sqlite3 {{input}}"

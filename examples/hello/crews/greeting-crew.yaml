@@ -1,0 +1,14 @@
+# A simple crew that creates poetic greetings
+name: greeting-crew
+description: Creates personalized greetings and transforms them into poetry
+agents:
+  - greeter
+  - poet
+process: sequential
+tasks:
+  - name: create-greeting
+    agent: greeter
+  - name: poetize
+    agent: poet
+    depends_on:
+      - create-greeting

@@ -1,0 +1,19 @@
+name: write-docs
+description: "Write documentation for new or changed features — update README, write API reference docs with request/response examples, create getting-started guides, add inline code comments for complex logic, and generate changelog entries"
+agent: tech-writer
+inputs:
+  - name: files_changed
+    type: string[]
+    required: true
+  - name: requirements
+    type: string
+    required: false
+outputs:
+  - name: doc_files
+    type: string[]
+dependencies:
+  - implement-feature
+timeout: 15m
+retry:
+  max_attempts: 2
+  backoff: fixed

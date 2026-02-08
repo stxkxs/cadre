@@ -1,0 +1,8 @@
+name: curl
+description: Make HTTP requests to test APIs, fetch resources, inspect headers, and debug network connectivity
+provider: exec
+capabilities:
+  - http
+  - api-testing
+config:
+  command: "curl {{input}}"

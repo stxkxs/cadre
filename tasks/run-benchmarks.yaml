@@ -1,0 +1,30 @@
+name: run-benchmarks
+description: "Run Go benchmarks across specified packages, compare results against a stored baseline using benchstat, flag any statistically significant regressions (>5% degradation), and produce a summary report with allocation and throughput deltas"
+agent: performance
+inputs:
+  - name: packages
+    type: string
+    required: true
+  - name: baseline_file
+    type: string
+    required: false
+  - name: bench_time
+    type: string
+    required: false
+    default: 5s
+  - name: count
+    type: string
+    required: false
+    default: "5"
+outputs:
+  - name: benchmark_results
+    type: string
+  - name: comparison_report
+    type: string
+  - name: regressions
+    type: string[]
+dependencies: []
+timeout: 30m
+retry:
+  max_attempts: 2
+  backoff: fixed

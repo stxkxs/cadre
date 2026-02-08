@@ -1,0 +1,32 @@
+name: deploy-helm
+description: "Package and deploy a Helm chart to a target Kubernetes cluster — validates chart templates, applies values overrides per environment, runs helm diff to preview changes, then performs a rolling upgrade with automatic rollback on failure"
+agent: devops
+inputs:
+  - name: chart_path
+    type: string
+    required: true
+  - name: release_name
+    type: string
+    required: true
+  - name: namespace
+    type: string
+    required: true
+  - name: values_overrides
+    type: string
+    required: false
+  - name: cluster_context
+    type: string
+    required: false
+    default: current-context
+outputs:
+  - name: release_status
+    type: string
+  - name: deployed_version
+    type: string
+  - name: diff_output
+    type: string
+dependencies: []
+timeout: 20m
+retry:
+  max_attempts: 2
+  backoff: exponential

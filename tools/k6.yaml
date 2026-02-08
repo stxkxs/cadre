@@ -1,0 +1,8 @@
+name: k6
+description: Run k6 load tests to measure API performance, simulate concurrent users, and identify throughput bottlenecks
+provider: exec
+capabilities:
+  - load-testing
+  - performance
+config:
+  command: "k6 {{input}}"

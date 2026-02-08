@@ -1,0 +1,28 @@
+name: database-migration
+description: "Design and implement a database schema migration — analyze current schema, write forward and rollback migration SQL, validate data integrity constraints, generate a migration plan with estimated impact, and test against a shadow database"
+agent: database
+inputs:
+  - name: requirements
+    type: string
+    required: true
+  - name: current_schema
+    type: string
+    required: false
+  - name: target_database
+    type: string
+    required: false
+    default: postgres
+outputs:
+  - name: migration_up
+    type: string
+  - name: migration_down
+    type: string
+  - name: migration_plan
+    type: string
+  - name: impact_report
+    type: string
+dependencies: []
+timeout: 25m
+retry:
+  max_attempts: 2
+  backoff: exponential

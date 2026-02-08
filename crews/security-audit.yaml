@@ -1,0 +1,15 @@
+name: security-audit
+description: "Comprehensive security review pipeline — container image scanning, source code security review, and authorization policy audit run in parallel for maximum coverage with minimal wall-clock time"
+agents:
+  - security-reviewer
+  - authz
+process: parallel
+concurrency: 3
+error_strategy: complete-running
+tasks:
+  - name: container-scan
+    agent: security-reviewer
+  - name: security-review
+    agent: security-reviewer
+  - name: authz-audit
+    agent: authz

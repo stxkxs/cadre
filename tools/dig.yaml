@@ -1,0 +1,8 @@
+name: dig
+description: Query DNS servers to resolve domains, inspect record types (A, AAAA, CNAME, MX, TXT, SRV), and debug DNS propagation
+provider: exec
+capabilities:
+  - dns
+  - networking
+config:
+  command: "dig {{input}}"

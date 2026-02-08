@@ -1,0 +1,28 @@
+name: cdk-synth
+description: "Write an AWS CDK construct or stack in TypeScript, synthesize the CloudFormation template, validate resource configurations, estimate costs with AWS Pricing API, and produce a diff against the currently deployed stack"
+agent: platform-engineer
+inputs:
+  - name: requirements
+    type: string
+    required: true
+  - name: target_account
+    type: string
+    required: false
+  - name: target_region
+    type: string
+    required: false
+    default: us-east-1
+outputs:
+  - name: cdk_code
+    type: string
+  - name: synth_template
+    type: string
+  - name: stack_diff
+    type: string
+  - name: cost_estimate
+    type: string
+dependencies: []
+timeout: 25m
+retry:
+  max_attempts: 2
+  backoff: exponential

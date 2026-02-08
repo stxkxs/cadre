@@ -1,0 +1,28 @@
+name: k8s-operator-build
+description: "End-to-end Kubernetes operator development — design CRD with validation and printer columns, implement reconciliation controller with RBAC and status management, write comprehensive tests, perform security review, and generate operator documentation"
+agents:
+  - k8s-crd
+  - k8s-operator
+  - qa
+  - tech-writer
+  - security-reviewer
+process: sequential
+tasks:
+  - name: design-crd
+    agent: k8s-crd
+  - name: implement-controller
+    agent: k8s-operator
+    depends_on:
+      - design-crd
+  - name: write-tests
+    agent: qa
+    depends_on:
+      - implement-controller
+  - name: security-review
+    agent: security-reviewer
+    depends_on:
+      - implement-controller
+  - name: write-docs
+    agent: tech-writer
+    depends_on:
+      - implement-controller

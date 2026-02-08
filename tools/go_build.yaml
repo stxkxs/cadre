@@ -1,0 +1,8 @@
+name: go_build
+description: Compile Go packages and dependencies with optional flags for output, build tags, and cross-compilation
+provider: exec
+capabilities:
+  - build
+  - go
+config:
+  command: "go build {{input}}"

@@ -1,0 +1,17 @@
+# Task to transform a greeting into poetry
+name: poetize
+description: Transform a greeting into a beautiful poem
+agent: poet
+inputs:
+  - name: greeting
+    type: string
+    required: true
+outputs:
+  - name: poem
+    type: string
+dependencies:
+  - create-greeting
+timeout: 5m
+retry:
+  max_attempts: 2
+  backoff: fixed

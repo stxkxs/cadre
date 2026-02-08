@@ -1,0 +1,16 @@
+name: performance-validation
+description: "Performance validation pipeline — run Go benchmarks, execute load tests via observability instrumentation, and profile resource usage in parallel to get a comprehensive performance picture fast"
+agents:
+  - performance
+  - observability
+  - qa
+process: parallel
+concurrency: 3
+error_strategy: complete-running
+tasks:
+  - name: run-benchmarks
+    agent: performance
+  - name: setup-observability
+    agent: observability
+  - name: api-integration-test
+    agent: qa

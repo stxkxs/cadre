@@ -1,0 +1,32 @@
+name: fullstack-build
+description: "Full-stack feature development — start with API design, then implement backend (Go) and frontend (Vite/React) in parallel against the spec, followed by integration testing and documentation. Uses fail-fast strategy to catch breaking changes early"
+agents:
+  - api-designer
+  - go-developer
+  - vite-developer
+  - qa
+  - tech-writer
+process: parallel
+concurrency: 4
+error_strategy: fail-fast
+tasks:
+  - name: design-api
+    agent: api-designer
+  - name: implement-feature
+    agent: go-developer
+    depends_on:
+      - design-api
+  - name: build-frontend
+    agent: vite-developer
+    depends_on:
+      - design-api
+  - name: write-tests
+    agent: qa
+    depends_on:
+      - implement-feature
+      - build-frontend
+  - name: write-docs
+    agent: tech-writer
+    depends_on:
+      - implement-feature
+      - build-frontend

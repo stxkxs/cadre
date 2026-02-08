@@ -1,0 +1,19 @@
+name: platform-review
+description: "Hierarchical platform review — the architect agent manages and delegates to specialist agents for security posture assessment, network policy review, observability coverage, and performance analysis. The architect synthesizes findings into a unified review"
+agents:
+  - architect
+  - security-reviewer
+  - networking
+  - observability
+  - performance
+process: hierarchical
+manager: architect
+tasks:
+  - name: security-review
+    agent: security-reviewer
+  - name: network-review
+    agent: networking
+  - name: observability-review
+    agent: observability
+  - name: performance-review
+    agent: performance

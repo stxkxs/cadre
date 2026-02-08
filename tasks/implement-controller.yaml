@@ -1,0 +1,19 @@
+name: implement-controller
+description: "Implement a Kubernetes controller with reconciliation loop — set up RBAC permissions, implement watch predicates for efficient filtering, handle status subresource updates, add finalizers for cleanup, and emit events for observability"
+agent: k8s-operator
+inputs:
+  - name: crd_yaml
+    type: string
+    required: true
+  - name: requirements
+    type: string
+    required: true
+outputs:
+  - name: controller_code
+    type: string
+dependencies:
+  - design-crd
+timeout: 30m
+retry:
+  max_attempts: 2
+  backoff: exponential

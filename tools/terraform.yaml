@@ -1,0 +1,8 @@
+name: terraform
+description: Run Terraform commands to plan, apply, and manage infrastructure as code
+provider: exec
+capabilities:
+  - infrastructure
+  - iac
+config:
+  command: "terraform {{input}}"

@@ -1,0 +1,8 @@
+name: npx
+description: Execute npm package binaries without installing them globally — useful for one-off commands and project-local tools
+provider: exec
+capabilities:
+  - package-management
+  - frontend
+config:
+  command: "npx {{input}}"

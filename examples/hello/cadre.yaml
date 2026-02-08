@@ -1,0 +1,20 @@
+# Example cadre project configuration
+name: hello
+version: "1.0"
+
+provider:
+  name: anthropic
+  model: claude-sonnet-4-20250514
+  # api_key: ${ANTHROPIC_API_KEY}
+
+defaults:
+  timeout: 30m
+  max_retries: 3
+
+logging:
+  level: info
+  format: text
+
+state:
+  driver: sqlite
+  path: .cadre/state.db

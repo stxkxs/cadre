@@ -1,0 +1,8 @@
+name: go_test
+description: Run Go tests with optional flags for race detection, coverage, verbose output, and package selection
+provider: exec
+capabilities:
+  - testing
+  - go
+config:
+  command: "go test {{input}}"

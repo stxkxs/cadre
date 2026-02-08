@@ -1,0 +1,17 @@
+name: design-api
+description: "Design a RESTful API — define resource endpoints with proper HTTP methods, request/response schemas with validation, error response format, pagination strategy, authentication flow, rate limiting, and generate an OpenAPI 3.0 specification"
+agent: api-designer
+inputs:
+  - name: requirements
+    type: string
+    required: true
+outputs:
+  - name: openapi_spec
+    type: string
+  - name: design_doc
+    type: string
+dependencies: []
+timeout: 20m
+retry:
+  max_attempts: 2
+  backoff: exponential

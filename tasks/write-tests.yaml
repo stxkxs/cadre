@@ -1,0 +1,21 @@
+name: write-tests
+description: "Write comprehensive tests for implemented code — unit tests with table-driven patterns, integration tests with real dependencies where feasible, edge case coverage for error paths and boundary conditions, and generate a coverage report"
+agent: qa
+inputs:
+  - name: files_changed
+    type: string[]
+    required: true
+  - name: requirements
+    type: string
+    required: false
+outputs:
+  - name: test_files
+    type: string[]
+  - name: coverage_report
+    type: string
+dependencies:
+  - implement-feature
+timeout: 20m
+retry:
+  max_attempts: 2
+  backoff: exponential

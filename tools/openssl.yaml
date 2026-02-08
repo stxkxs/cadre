@@ -1,0 +1,9 @@
+name: openssl
+description: Run OpenSSL commands to inspect certificates, test TLS connections, generate keys, and verify certificate chains
+provider: exec
+capabilities:
+  - tls
+  - certificates
+  - cryptography
+config:
+  command: "openssl {{input}}"

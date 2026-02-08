@@ -1,0 +1,9 @@
+name: golangci_lint
+description: Run golangci-lint to perform comprehensive static analysis with multiple linters on Go code
+provider: exec
+capabilities:
+  - linting
+  - static-analysis
+  - go
+config:
+  command: "golangci-lint run {{input}}"
