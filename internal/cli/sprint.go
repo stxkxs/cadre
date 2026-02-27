@@ -7,8 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/cadre-oss/cadre/internal/sprint"
-	"github.com/cadre-oss/cadre/internal/telemetry"
+	"github.com/stxkxs/cadre/internal/sprint"
+	"github.com/stxkxs/cadre/internal/telemetry"
 	"github.com/spf13/cobra"
 )
 

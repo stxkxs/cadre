@@ -5,7 +5,7 @@ BINARY_NAME := cadre
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 BUILD_TIME := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 GIT_COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-LDFLAGS := -ldflags "-X main.version=$(VERSION) -X main.buildTime=$(BUILD_TIME) -X github.com/cadre-oss/cadre/internal/cli.Version=$(VERSION) -X github.com/cadre-oss/cadre/internal/cli.BuildTime=$(BUILD_TIME) -X github.com/cadre-oss/cadre/internal/cli.GitCommit=$(GIT_COMMIT)"
+LDFLAGS := -ldflags "-X main.version=$(VERSION) -X main.buildTime=$(BUILD_TIME) -X github.com/stxkxs/cadre/internal/cli.Version=$(VERSION) -X github.com/stxkxs/cadre/internal/cli.BuildTime=$(BUILD_TIME) -X github.com/stxkxs/cadre/internal/cli.GitCommit=$(GIT_COMMIT)"
 
 # Go parameters
 GOCMD := go

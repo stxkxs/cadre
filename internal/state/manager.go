@@ -258,6 +258,20 @@ func (m *Manager) AddAgentMemory(agentName string, messages []Message) error {
 	return nil
 }
 
+// SetMetadata sets a key-value pair on the active run's metadata.
+func (m *Manager) SetMetadata(key string, value interface{}) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.activeRun == nil {
+		return
+	}
+	if m.activeRun.Metadata == nil {
+		m.activeRun.Metadata = make(map[string]interface{})
+	}
+	m.activeRun.Metadata[key] = value
+}
+
 // GetAgentMemory retrieves stored agent memory
 func (m *Manager) GetAgentMemory(agentName string) ([]Message, error) {
 	m.mu.RLock()

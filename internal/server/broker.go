@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cadre-oss/cadre/internal/event"
-	"github.com/cadre-oss/cadre/internal/telemetry"
+	"github.com/stxkxs/cadre/internal/event"
+	"github.com/stxkxs/cadre/internal/telemetry"
 )
 
 // SSEEvent is sent to connected clients.

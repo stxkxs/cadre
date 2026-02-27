@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cadre-oss/cadre/internal/provider"
+	"github.com/stxkxs/cadre/internal/provider"
 )
 
 // Message represents a conversation message

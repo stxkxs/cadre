@@ -7,11 +7,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/cadre-oss/cadre/internal/config"
-	"github.com/cadre-oss/cadre/internal/crew"
-	"github.com/cadre-oss/cadre/internal/provider/claudecode"
-	"github.com/cadre-oss/cadre/internal/state"
-	"github.com/cadre-oss/cadre/internal/telemetry"
+	"github.com/stxkxs/cadre/internal/config"
+	"github.com/stxkxs/cadre/internal/crew"
+	"github.com/stxkxs/cadre/internal/provider/claudecode"
+	"github.com/stxkxs/cadre/internal/state"
+	"github.com/stxkxs/cadre/internal/telemetry"
 	"github.com/spf13/cobra"
 )
 

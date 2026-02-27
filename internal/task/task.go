@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cadre-oss/cadre/internal/config"
+	"github.com/stxkxs/cadre/internal/config"
 )
 
 // Task represents a unit of work

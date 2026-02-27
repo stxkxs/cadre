@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/cadre-oss/cadre/internal/agent"
-	"github.com/cadre-oss/cadre/internal/provider"
-	"github.com/cadre-oss/cadre/internal/testutil"
+	"github.com/stxkxs/cadre/internal/agent"
+	"github.com/stxkxs/cadre/internal/provider"
+	"github.com/stxkxs/cadre/internal/testutil"
 )
 
 func TestStreamExecute_WithToolCalls_Integration(t *testing.T) {

@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/cadre-oss/cadre/internal/mcp"
+	"github.com/stxkxs/cadre/internal/mcp"
 	"github.com/spf13/cobra"
 )
 

@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/cadre-oss/cadre/internal/config"
-	"github.com/cadre-oss/cadre/internal/event"
-	"github.com/cadre-oss/cadre/internal/state"
-	"github.com/cadre-oss/cadre/internal/telemetry"
+	"github.com/stxkxs/cadre/internal/config"
+	"github.com/stxkxs/cadre/internal/event"
+	"github.com/stxkxs/cadre/internal/state"
+	"github.com/stxkxs/cadre/internal/telemetry"
 )
 
 // Server is the cadre web UI HTTP server.
@@ -121,6 +121,16 @@ func (s *Server) setupRoutes() *http.ServeMux {
 	// SSE events
 	mux.HandleFunc("GET /api/events", s.handleSSEEvents)
 	mux.HandleFunc("GET /api/events/{runID}", s.handleSSEEventsFiltered)
+
+	// Templates
+	mux.HandleFunc("GET /api/templates", s.handleListTemplates)
+	mux.HandleFunc("GET /api/templates/agents", s.handleListTemplateAgents)
+	mux.HandleFunc("GET /api/templates/agents/{name}", s.handleGetTemplateAgent)
+	mux.HandleFunc("GET /api/templates/tasks", s.handleListTemplateTasks)
+	mux.HandleFunc("GET /api/templates/tasks/{name}", s.handleGetTemplateTask)
+	mux.HandleFunc("GET /api/templates/crews", s.handleListTemplateCrews)
+	mux.HandleFunc("GET /api/templates/crews/{name}", s.handleGetTemplateCrew)
+	mux.HandleFunc("POST /api/templates/import", s.handleImportTemplate)
 
 	// Static frontend (SPA fallback)
 	mux.Handle("/", staticHandler())

@@ -103,8 +103,8 @@ func validateTask(cfg *TaskConfig) error {
 	return nil
 }
 
-// validateCrew validates a crew configuration
-func validateCrew(cfg *CrewConfig) error {
+// ValidateCrew validates a crew configuration
+func ValidateCrew(cfg *CrewConfig) error {
 	var errors []string
 
 	if cfg.Name == "" {
@@ -139,6 +139,14 @@ func validateCrew(cfg *CrewConfig) error {
 	}
 	if !validErrorStrategies[cfg.ErrorStrategy] {
 		errors = append(errors, fmt.Sprintf("invalid error_strategy: %s (must be fail-fast, complete-running, or continue-all)", cfg.ErrorStrategy))
+	}
+
+	// Validate max_iterations
+	if cfg.MaxIterations < 0 {
+		errors = append(errors, "max_iterations must be non-negative")
+	}
+	if cfg.MaxIterations > 100 {
+		errors = append(errors, "max_iterations cannot exceed 100")
 	}
 
 	// Validate tasks
@@ -182,10 +190,8 @@ func validateCrew(cfg *CrewConfig) error {
 		}
 	}
 
-	// Validate no dependency cycles
-	if cycleErr := validateDependencyCycles(cfg.Tasks); cycleErr != nil {
-		errors = append(errors, cycleErr.Error())
-	}
+	// Note: dependency cycles are allowed (loop workflows).
+	// The runtime handles cycles via iteration limits.
 
 	if len(errors) > 0 {
 		return fmt.Errorf("crew validation failed: %s", strings.Join(errors, "; "))

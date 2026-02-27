@@ -361,7 +361,7 @@ func TestTaskExecution(t *testing.T) {
 ### mock provider usage
 
 ```go
-import "github.com/cadre-oss/cadre/internal/testutil"
+import "github.com/stxkxs/cadre/internal/testutil"
 
 // inject mock provider into agent runtime
 mock := &testutil.MockProvider{

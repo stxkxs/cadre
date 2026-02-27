@@ -4,7 +4,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/cadre-oss/cadre/internal/config"
+	"github.com/stxkxs/cadre/internal/config"
 )
 
 func makeTask(name string, deps ...string) *Task {
@@ -339,6 +339,109 @@ func TestDAG_GetChildren(t *testing.T) {
 	sort.Strings(children)
 	if len(children) != 2 || children[0] != "b" || children[1] != "c" {
 		t.Fatalf("expected [b c], got %v", children)
+	}
+}
+
+func TestDAG_HasCycles_WithCycle(t *testing.T) {
+	dag := NewDAG()
+	dag.AddTask(makeTask("a", "b"))
+	dag.AddTask(makeTask("b", "a"))
+
+	if !dag.HasCycles() {
+		t.Fatal("expected cycle to be detected")
+	}
+}
+
+func TestDAG_HasCycles_NoCycle(t *testing.T) {
+	dag := NewDAG()
+	dag.AddTask(makeTask("a"))
+	dag.AddTask(makeTask("b", "a"))
+	dag.AddTask(makeTask("c", "b"))
+
+	if dag.HasCycles() {
+		t.Fatal("expected no cycle")
+	}
+}
+
+func TestDAG_ValidateDeps_Valid(t *testing.T) {
+	dag := NewDAG()
+	dag.AddTask(makeTask("a", "b"))
+	dag.AddTask(makeTask("b", "a"))
+
+	// ValidateDeps should not error on cycles — only checks refs exist
+	if err := dag.ValidateDeps(); err != nil {
+		t.Fatalf("expected no error, got: %v", err)
+	}
+}
+
+func TestDAG_ValidateDeps_MissingRef(t *testing.T) {
+	dag := NewDAG()
+	dag.AddTask(makeTask("a", "nonexistent"))
+
+	err := dag.ValidateDeps()
+	if err == nil {
+		t.Fatal("expected error for missing dependency")
+	}
+}
+
+func TestDAG_Linearize_WithCycle(t *testing.T) {
+	dag := NewDAG()
+	dag.AddTask(makeTask("a", "b"))
+	dag.AddTask(makeTask("b", "a"))
+
+	tasks, err := dag.Linearize()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(tasks) != 2 {
+		t.Fatalf("expected 2 tasks, got %d", len(tasks))
+	}
+
+	// Both tasks should appear in the result
+	names := taskNames(tasks)
+	sort.Strings(names)
+	if names[0] != "a" || names[1] != "b" {
+		t.Fatalf("expected [a b], got %v", names)
+	}
+}
+
+func TestDAG_Linearize_NoCycle(t *testing.T) {
+	dag := NewDAG()
+	dag.AddTask(makeTask("a"))
+	dag.AddTask(makeTask("b", "a"))
+	dag.AddTask(makeTask("c", "b"))
+
+	tasks, err := dag.Linearize()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(tasks) != 3 {
+		t.Fatalf("expected 3 tasks, got %d", len(tasks))
+	}
+
+	names := taskNames(tasks)
+	// Without cycles, should fall back to TopologicalSort: a before b before c
+	posA, posB, posC := indexOf(names, "a"), indexOf(names, "b"), indexOf(names, "c")
+	if posA >= posB || posB >= posC {
+		t.Fatalf("wrong order: %v", names)
+	}
+}
+
+func TestDAG_Linearize_ThreeWayCycle(t *testing.T) {
+	dag := NewDAG()
+	dag.AddTask(makeTask("a", "c"))
+	dag.AddTask(makeTask("b", "a"))
+	dag.AddTask(makeTask("c", "b"))
+
+	tasks, err := dag.Linearize()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(tasks) != 3 {
+		t.Fatalf("expected 3 tasks, got %d", len(tasks))
 	}
 }
 

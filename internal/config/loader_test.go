@@ -185,21 +185,21 @@ func TestValidateCrew_EmptyProvider(t *testing.T) {
 		},
 	}
 	// Empty process defaults to sequential, which is valid
-	if err := validateCrew(cfg); err != nil {
+	if err := ValidateCrew(cfg); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
 func TestValidateCrew_MissingName(t *testing.T) {
 	cfg := &CrewConfig{Agents: []string{"a"}}
-	if err := validateCrew(cfg); err == nil {
+	if err := ValidateCrew(cfg); err == nil {
 		t.Fatal("expected validation error for missing name")
 	}
 }
 
 func TestValidateCrew_NoAgents(t *testing.T) {
 	cfg := &CrewConfig{Name: "test"}
-	if err := validateCrew(cfg); err == nil {
+	if err := ValidateCrew(cfg); err == nil {
 		t.Fatal("expected validation error for no agents")
 	}
 }

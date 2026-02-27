@@ -135,6 +135,7 @@ type CrewConfig struct {
 	Process       string           `yaml:"process" json:"process"`
 	Concurrency   int              `yaml:"concurrency" json:"concurrency"`
 	ErrorStrategy string           `yaml:"error_strategy" json:"error_strategy"`
+	MaxIterations int              `yaml:"max_iterations,omitempty" json:"max_iterations,omitempty"`
 	Tasks         []CrewTaskConfig `yaml:"tasks" json:"tasks"`
 	Manager       string           `yaml:"manager,omitempty" json:"manager,omitempty"`
 }

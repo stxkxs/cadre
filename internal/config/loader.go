@@ -104,7 +104,7 @@ func LoadCrew(name string) (*CrewConfig, error) {
 		return nil, fmt.Errorf("failed to parse crew config: %w", err)
 	}
 
-	if err := validateCrew(&cfg); err != nil {
+	if err := ValidateCrew(&cfg); err != nil {
 		return nil, err
 	}
 

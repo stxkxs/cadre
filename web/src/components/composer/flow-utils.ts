@@ -7,7 +7,22 @@ export interface TaskNodeData {
   agent: string
   description?: string
   status?: string
+  timeout?: string
+  retry?: { max_attempts: number; backoff: string }
+  inputs?: TaskInputItem[]
+  outputs?: TaskOutputItem[]
   [key: string]: unknown
+}
+
+export interface TaskInputItem {
+  name: string
+  type: string
+  required: boolean
+}
+
+export interface TaskOutputItem {
+  name: string
+  type: string
 }
 
 export function crewConfigToFlow(crew: Crew): { nodes: Node<TaskNodeData>[]; edges: Edge[] } {
@@ -18,6 +33,11 @@ export function crewConfigToFlow(crew: Crew): { nodes: Node<TaskNodeData>[]; edg
     data: {
       label: task.name,
       agent: task.agent,
+      description: task.description,
+      timeout: task.timeout,
+      retry: task.retry ? { max_attempts: task.retry.max_attempts, backoff: task.retry.backoff } : undefined,
+      inputs: task.inputs,
+      outputs: task.outputs,
     },
   }))
 
@@ -41,7 +61,7 @@ export function crewConfigToFlow(crew: Crew): { nodes: Node<TaskNodeData>[]; edg
 export function flowToCrewConfig(
   nodes: Node<TaskNodeData>[],
   edges: Edge[],
-  meta: { name: string; description: string; process: string; manager?: string; errorStrategy?: string; concurrency?: number },
+  meta: { name: string; description: string; process: string; manager?: string; errorStrategy?: string; concurrency?: number; maxIterations?: number },
 ): Crew {
   const agents = [...new Set(nodes.map((n) => n.data.agent).filter(Boolean))]
 
@@ -50,11 +70,18 @@ export function flowToCrewConfig(
       .filter((e) => e.target === node.id)
       .map((e) => e.source)
 
-    return {
+    const crewTask: CrewTask = {
       name: node.data.label || node.id,
       agent: node.data.agent || '',
       ...(deps.length > 0 ? { depends_on: deps } : {}),
+      ...(node.data.description ? { description: node.data.description } : {}),
+      ...(node.data.timeout ? { timeout: node.data.timeout } : {}),
+      ...(node.data.retry?.max_attempts ? { retry: node.data.retry } : {}),
+      ...(node.data.inputs?.length ? { inputs: node.data.inputs } : {}),
+      ...(node.data.outputs?.length ? { outputs: node.data.outputs } : {}),
     }
+
+    return crewTask
   })
 
   return {
@@ -66,6 +93,7 @@ export function flowToCrewConfig(
     ...(meta.manager ? { manager: meta.manager } : {}),
     ...(meta.errorStrategy ? { error_strategy: meta.errorStrategy } : {}),
     ...(meta.concurrency ? { concurrency: meta.concurrency } : {}),
+    ...(meta.maxIterations ? { max_iterations: meta.maxIterations } : {}),
   }
 }
 

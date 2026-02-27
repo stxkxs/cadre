@@ -10,6 +10,7 @@ const pageNames: Record<string, string> = {
   '/crews': 'Crews',
   '/composer': 'Composer',
   '/runs': 'Runs',
+  '/templates': 'Templates',
 }
 
 export function Topbar() {

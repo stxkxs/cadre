@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/cadre-oss/cadre/internal/mcp"
-	"github.com/cadre-oss/cadre/internal/telemetry"
+	"github.com/stxkxs/cadre/internal/mcp"
+	"github.com/stxkxs/cadre/internal/telemetry"
 )
 
 // Session manages a sprint execution lifecycle.

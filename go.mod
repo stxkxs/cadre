@@ -1,4 +1,4 @@
-module github.com/cadre-oss/cadre
+module github.com/stxkxs/cadre
 
 go 1.25.5
 

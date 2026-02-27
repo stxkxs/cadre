@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/cadre-oss/cadre/internal/cli"
+	"github.com/stxkxs/cadre/internal/cli"
 )
 
 func main() {

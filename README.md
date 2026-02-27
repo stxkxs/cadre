@@ -19,7 +19,7 @@
 ### Installation
 
 ```bash
-git clone https://github.com/cadre-oss/cadre.git
+git clone https://github.com/stxkxs/cadre.git
 cd cadre
 make build
 ./build/cadre --help

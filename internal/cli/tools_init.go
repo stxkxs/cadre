@@ -1,9 +1,9 @@
 package cli
 
 import (
-	"github.com/cadre-oss/cadre/internal/config"
-	"github.com/cadre-oss/cadre/internal/telemetry"
-	"github.com/cadre-oss/cadre/internal/tool"
+	"github.com/stxkxs/cadre/internal/config"
+	"github.com/stxkxs/cadre/internal/telemetry"
+	"github.com/stxkxs/cadre/internal/tool"
 )
 
 // registerCustomTools loads exec/http tools from tools/*.yaml and registers

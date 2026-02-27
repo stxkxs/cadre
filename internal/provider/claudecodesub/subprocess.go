@@ -12,7 +12,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/cadre-oss/cadre/internal/provider"
+	"github.com/stxkxs/cadre/internal/provider"
 )
 
 // Provider runs the Claude Code CLI as a subprocess.

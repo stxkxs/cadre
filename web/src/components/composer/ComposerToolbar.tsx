@@ -1,4 +1,4 @@
-import { Save, CheckCircle, Play, Settings2 } from 'lucide-react'
+import { Save, CheckCircle, Play, Settings2, Undo2, Redo2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
@@ -19,6 +19,7 @@ interface ComposerToolbarProps {
   manager: string
   errorStrategy: string
   concurrency: number
+  maxIterations: number
   onSave: () => void
   onValidate: () => void
   onRun: () => void
@@ -29,9 +30,15 @@ interface ComposerToolbarProps {
     manager: string
     errorStrategy: string
     concurrency: number
+    maxIterations: number
   }) => void
   saving: boolean
   validating: boolean
+  canUndo?: boolean
+  canRedo?: boolean
+  onUndo?: () => void
+  onRedo?: () => void
+  isDirty?: boolean
 }
 
 export function ComposerToolbar({
@@ -41,12 +48,18 @@ export function ComposerToolbar({
   manager,
   errorStrategy,
   concurrency,
+  maxIterations,
   onSave,
   onValidate,
   onRun,
   onMetaChange,
   saving,
   validating,
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo,
+  isDirty,
 }: ComposerToolbarProps) {
   const [open, setOpen] = useState(false)
 
@@ -54,10 +67,11 @@ export function ComposerToolbar({
     <div className="flex items-center gap-2 border-b bg-background/50 px-4 py-1.5">
       <Input
         value={crewName}
-        onChange={(e) => onMetaChange({ name: e.target.value, description: crewDescription, process, manager, errorStrategy, concurrency })}
+        onChange={(e) => onMetaChange({ name: e.target.value, description: crewDescription, process, manager, errorStrategy, concurrency, maxIterations })}
         placeholder="Crew name"
         className="h-8 w-48 text-sm font-mono"
       />
+      {isDirty && <span className="text-[var(--accent-orange)] font-bold text-sm">*</span>}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
@@ -75,14 +89,14 @@ export function ComposerToolbar({
               <label className="text-xs text-muted-foreground mb-1 block">Description</label>
               <Input
                 value={crewDescription}
-                onChange={(e) => onMetaChange({ name: crewName, description: e.target.value, process, manager, errorStrategy, concurrency })}
+                onChange={(e) => onMetaChange({ name: crewName, description: e.target.value, process, manager, errorStrategy, concurrency, maxIterations })}
               />
             </div>
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">Process</label>
               <Select
                 value={process}
-                onChange={(e) => onMetaChange({ name: crewName, description: crewDescription, process: e.target.value, manager, errorStrategy, concurrency })}
+                onChange={(e) => onMetaChange({ name: crewName, description: crewDescription, process: e.target.value, manager, errorStrategy, concurrency, maxIterations })}
               >
                 <option value="sequential">Sequential</option>
                 <option value="parallel">Parallel</option>
@@ -94,7 +108,7 @@ export function ComposerToolbar({
                 <label className="text-xs text-muted-foreground mb-1 block">Manager Agent</label>
                 <Input
                   value={manager}
-                  onChange={(e) => onMetaChange({ name: crewName, description: crewDescription, process, manager: e.target.value, errorStrategy, concurrency })}
+                  onChange={(e) => onMetaChange({ name: crewName, description: crewDescription, process, manager: e.target.value, errorStrategy, concurrency, maxIterations })}
                 />
               </div>
             )}
@@ -104,7 +118,7 @@ export function ComposerToolbar({
                   <label className="text-xs text-muted-foreground mb-1 block">Error Strategy</label>
                   <Select
                     value={errorStrategy}
-                    onChange={(e) => onMetaChange({ name: crewName, description: crewDescription, process, manager, errorStrategy: e.target.value, concurrency })}
+                    onChange={(e) => onMetaChange({ name: crewName, description: crewDescription, process, manager, errorStrategy: e.target.value, concurrency, maxIterations })}
                   >
                     <option value="fail-fast">Fail Fast</option>
                     <option value="complete-running">Complete Running</option>
@@ -116,14 +130,37 @@ export function ComposerToolbar({
                   <Input
                     type="number"
                     value={concurrency}
-                    onChange={(e) => onMetaChange({ name: crewName, description: crewDescription, process, manager, errorStrategy, concurrency: parseInt(e.target.value) || 0 })}
+                    onChange={(e) => onMetaChange({ name: crewName, description: crewDescription, process, manager, errorStrategy, concurrency: parseInt(e.target.value) || 0, maxIterations })}
                   />
                 </div>
               </>
             )}
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Max Iterations</label>
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                value={maxIterations}
+                onChange={(e) => onMetaChange({ name: crewName, description: crewDescription, process, manager, errorStrategy, concurrency, maxIterations: parseInt(e.target.value) || 0 })}
+              />
+              <p className="text-xs text-muted-foreground mt-1">0 = single pass, &gt;0 for loop workflows</p>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Undo/Redo */}
+      {onUndo && (
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onUndo} disabled={!canUndo} title="Undo (Cmd+Z)">
+          <Undo2 className="h-4 w-4" />
+        </Button>
+      )}
+      {onRedo && (
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onRedo} disabled={!canRedo} title="Redo (Cmd+Shift+Z)">
+          <Redo2 className="h-4 w-4" />
+        </Button>
+      )}
 
       <div className="flex-1" />
 

@@ -9,9 +9,9 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/cadre-oss/cadre/internal/config"
-	"github.com/cadre-oss/cadre/internal/quick"
-	"github.com/cadre-oss/cadre/internal/telemetry"
+	"github.com/stxkxs/cadre/internal/config"
+	"github.com/stxkxs/cadre/internal/quick"
+	"github.com/stxkxs/cadre/internal/telemetry"
 	"github.com/spf13/cobra"
 )
 

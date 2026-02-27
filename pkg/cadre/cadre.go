@@ -2,7 +2,7 @@
 //
 // Example usage:
 //
-//	import "github.com/cadre-oss/cadre/pkg/cadre"
+//	import "github.com/stxkxs/cadre/pkg/cadre"
 //
 //	// Run a crew
 //	result, err := cadre.Run("development", map[string]interface{}{
@@ -17,11 +17,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cadre-oss/cadre/internal/agent"
-	"github.com/cadre-oss/cadre/internal/config"
-	internalCrew "github.com/cadre-oss/cadre/internal/crew"
-	"github.com/cadre-oss/cadre/internal/state"
-	"github.com/cadre-oss/cadre/internal/telemetry"
+	"github.com/stxkxs/cadre/internal/agent"
+	"github.com/stxkxs/cadre/internal/config"
+	internalCrew "github.com/stxkxs/cadre/internal/crew"
+	"github.com/stxkxs/cadre/internal/state"
+	"github.com/stxkxs/cadre/internal/telemetry"
 )
 
 // StreamCallback receives text chunks as they arrive.

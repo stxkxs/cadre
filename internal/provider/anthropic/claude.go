@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	cadreErrors "github.com/cadre-oss/cadre/internal/errors"
-	"github.com/cadre-oss/cadre/internal/provider"
+	cadreErrors "github.com/stxkxs/cadre/internal/errors"
+	"github.com/stxkxs/cadre/internal/provider"
 )
 
 const (

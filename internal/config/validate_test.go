@@ -5,11 +5,11 @@ import (
 	"testing"
 )
 
-func TestValidateCrew_CircularDeps(t *testing.T) {
+func TestValidateCrew_CyclicDepsAllowed(t *testing.T) {
+	// Cycles are allowed — loop workflows let agents iterate through each other.
 	tests := []struct {
-		name    string
-		tasks   []CrewTaskConfig
-		wantErr string
+		name  string
+		tasks []CrewTaskConfig
 	}{
 		{
 			name: "simple cycle A->B->A",
@@ -17,7 +17,6 @@ func TestValidateCrew_CircularDeps(t *testing.T) {
 				{Name: "a", Agent: "dev", DependsOn: []string{"b"}},
 				{Name: "b", Agent: "dev", DependsOn: []string{"a"}},
 			},
-			wantErr: "circular dependency",
 		},
 		{
 			name: "three-way cycle A->B->C->A",
@@ -26,14 +25,12 @@ func TestValidateCrew_CircularDeps(t *testing.T) {
 				{Name: "b", Agent: "dev", DependsOn: []string{"c"}},
 				{Name: "c", Agent: "dev", DependsOn: []string{"a"}},
 			},
-			wantErr: "circular dependency",
 		},
 		{
 			name: "self-referencing",
 			tasks: []CrewTaskConfig{
 				{Name: "a", Agent: "dev", DependsOn: []string{"a"}},
 			},
-			wantErr: "circular dependency",
 		},
 		{
 			name: "no cycle",
@@ -42,7 +39,6 @@ func TestValidateCrew_CircularDeps(t *testing.T) {
 				{Name: "b", Agent: "dev", DependsOn: []string{"a"}},
 				{Name: "c", Agent: "dev", DependsOn: []string{"a", "b"}},
 			},
-			wantErr: "",
 		},
 	}
 
@@ -53,17 +49,9 @@ func TestValidateCrew_CircularDeps(t *testing.T) {
 				Agents: []string{"dev"},
 				Tasks:  tt.tasks,
 			}
-			err := validateCrew(cfg)
-			if tt.wantErr == "" {
-				if err != nil {
-					t.Errorf("expected no error, got: %v", err)
-				}
-			} else {
-				if err == nil {
-					t.Errorf("expected error containing %q, got nil", tt.wantErr)
-				} else if !strings.Contains(err.Error(), tt.wantErr) {
-					t.Errorf("expected error containing %q, got: %v", tt.wantErr, err)
-				}
+			err := ValidateCrew(cfg)
+			if err != nil {
+				t.Errorf("expected no error (cycles allowed), got: %v", err)
 			}
 		})
 	}
@@ -77,7 +65,7 @@ func TestValidateCrew_MissingAgentRef(t *testing.T) {
 			{Name: "task1", Agent: "reviewer"}, // reviewer not in agents list
 		},
 	}
-	err := validateCrew(cfg)
+	err := ValidateCrew(cfg)
 	if err == nil {
 		t.Fatal("expected error for missing agent reference")
 	}
@@ -96,7 +84,7 @@ func TestValidateCrew_MissingManagerRef(t *testing.T) {
 			{Name: "task1", Agent: "developer"},
 		},
 	}
-	err := validateCrew(cfg)
+	err := ValidateCrew(cfg)
 	if err == nil {
 		t.Fatal("expected error for missing manager reference")
 	}
@@ -113,12 +101,62 @@ func TestValidateCrew_MissingDependency(t *testing.T) {
 			{Name: "task1", Agent: "dev", DependsOn: []string{"nonexistent"}},
 		},
 	}
-	err := validateCrew(cfg)
+	err := ValidateCrew(cfg)
 	if err == nil {
 		t.Fatal("expected error for missing dependency")
 	}
 	if !strings.Contains(err.Error(), "unknown task") {
 		t.Errorf("expected unknown task error, got: %v", err)
+	}
+}
+
+func TestValidateCrew_MaxIterationsValid(t *testing.T) {
+	cfg := &CrewConfig{
+		Name:          "test-crew",
+		Agents:        []string{"dev"},
+		MaxIterations: 5,
+		Tasks: []CrewTaskConfig{
+			{Name: "task1", Agent: "dev"},
+		},
+	}
+	if err := ValidateCrew(cfg); err != nil {
+		t.Errorf("expected no error, got: %v", err)
+	}
+}
+
+func TestValidateCrew_MaxIterationsNegative(t *testing.T) {
+	cfg := &CrewConfig{
+		Name:          "test-crew",
+		Agents:        []string{"dev"},
+		MaxIterations: -1,
+		Tasks: []CrewTaskConfig{
+			{Name: "task1", Agent: "dev"},
+		},
+	}
+	err := ValidateCrew(cfg)
+	if err == nil {
+		t.Fatal("expected error for negative max_iterations")
+	}
+	if !strings.Contains(err.Error(), "max_iterations must be non-negative") {
+		t.Errorf("expected non-negative error, got: %v", err)
+	}
+}
+
+func TestValidateCrew_MaxIterationsExceedsLimit(t *testing.T) {
+	cfg := &CrewConfig{
+		Name:          "test-crew",
+		Agents:        []string{"dev"},
+		MaxIterations: 101,
+		Tasks: []CrewTaskConfig{
+			{Name: "task1", Agent: "dev"},
+		},
+	}
+	err := ValidateCrew(cfg)
+	if err == nil {
+		t.Fatal("expected error for max_iterations > 100")
+	}
+	if !strings.Contains(err.Error(), "max_iterations cannot exceed 100") {
+		t.Errorf("expected exceed limit error, got: %v", err)
 	}
 }
 

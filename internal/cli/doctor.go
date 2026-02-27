@@ -6,9 +6,9 @@ import (
 	"os/exec"
 	"runtime"
 
-	"github.com/cadre-oss/cadre/internal/config"
-	"github.com/cadre-oss/cadre/internal/state"
-	"github.com/cadre-oss/cadre/internal/tool"
+	"github.com/stxkxs/cadre/internal/config"
+	"github.com/stxkxs/cadre/internal/state"
+	"github.com/stxkxs/cadre/internal/tool"
 	"github.com/spf13/cobra"
 )
 

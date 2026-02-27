@@ -3,7 +3,7 @@ package tool
 import (
 	"context"
 
-	"github.com/cadre-oss/cadre/internal/tool/builtin"
+	"github.com/stxkxs/cadre/internal/tool/builtin"
 )
 
 // builtinTools holds references to built-in tools

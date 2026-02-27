@@ -9,6 +9,7 @@ import { CrewsPage } from '@/pages/CrewsPage'
 import { ComposerPage } from '@/pages/ComposerPage'
 import { RunsPage } from '@/pages/RunsPage'
 import { RunDetailPage } from '@/pages/RunDetailPage'
+import { TemplatesPage } from '@/pages/TemplatesPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +35,7 @@ export function App() {
             <Route path="composer/:name" element={<ComposerPage />} />
             <Route path="runs" element={<RunsPage />} />
             <Route path="runs/:id" element={<RunDetailPage />} />
+            <Route path="templates" element={<TemplatesPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

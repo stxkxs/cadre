@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	cadreErrors "github.com/cadre-oss/cadre/internal/errors"
-	"github.com/cadre-oss/cadre/internal/provider"
+	cadreErrors "github.com/stxkxs/cadre/internal/errors"
+	"github.com/stxkxs/cadre/internal/provider"
 )
 
 // StreamCallback receives streaming content chunks.

@@ -6,13 +6,13 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cadre-oss/cadre/internal/agent"
-	"github.com/cadre-oss/cadre/internal/config"
-	"github.com/cadre-oss/cadre/internal/crew"
-	"github.com/cadre-oss/cadre/internal/event"
-	"github.com/cadre-oss/cadre/internal/provider"
-	"github.com/cadre-oss/cadre/internal/task"
-	"github.com/cadre-oss/cadre/internal/testutil"
+	"github.com/stxkxs/cadre/internal/agent"
+	"github.com/stxkxs/cadre/internal/config"
+	"github.com/stxkxs/cadre/internal/crew"
+	"github.com/stxkxs/cadre/internal/event"
+	"github.com/stxkxs/cadre/internal/provider"
+	"github.com/stxkxs/cadre/internal/task"
+	"github.com/stxkxs/cadre/internal/testutil"
 )
 
 func TestSequentialWorkflow(t *testing.T) {
@@ -158,6 +158,108 @@ func TestSequentialWorkflow_DependencyPropagation(t *testing.T) {
 		t.Error("expected 'result' input on deploy task")
 	} else if val != "built artifacts" {
 		t.Errorf("expected 'built artifacts', got %v", val)
+	}
+}
+
+func TestIterativeWorkflow(t *testing.T) {
+	// 2 tasks in a cycle (A depends on B, B depends on A) with max_iterations=2
+	// Requires 2 iterations × 2 tasks = 4 mock responses
+	mock := &testutil.MockProvider{
+		Responses: []*provider.Response{
+			// Iteration 1
+			{Content: `{"step": "first-a"}`, StopReason: "end_turn"},
+			{Content: `{"step": "first-b"}`, StopReason: "end_turn"},
+			// Iteration 2
+			{Content: `{"step": "second-a"}`, StopReason: "end_turn"},
+			{Content: `{"step": "second-b"}`, StopReason: "end_turn"},
+		},
+	}
+
+	cfg := testutil.TestConfig()
+	logger := testutil.TestLogger()
+
+	agentACfg := testutil.TestAgentConfig("agent-a")
+	agentBCfg := testutil.TestAgentConfig("agent-b")
+
+	runtimeA, _ := agent.NewRuntimeWithProvider(cfg, agentACfg, mock, logger)
+	runtimeB, _ := agent.NewRuntimeWithProvider(cfg, agentBCfg, mock, logger)
+
+	agents := map[string]*agent.Runtime{
+		"agent-a": runtimeA,
+		"agent-b": runtimeB,
+	}
+
+	executor := task.NewExecutor(cfg, logger)
+	maxIterations := 2
+
+	// Track outputs across iterations
+	var lastOutputs map[string]interface{}
+
+	for iteration := 1; iteration <= maxIterations; iteration++ {
+		// Build a fresh DAG each iteration (mimics Reset + Linearize)
+		dag := task.NewDAG()
+		taskA := task.NewTask(&config.TaskConfig{
+			Name:         "task-a",
+			Description:  "Task A",
+			Agent:        "agent-a",
+			Dependencies: []string{"task-b"},
+			Outputs:      []config.OutputConfig{{Name: "step", Type: "string"}},
+		})
+		taskB := task.NewTask(&config.TaskConfig{
+			Name:         "task-b",
+			Description:  "Task B",
+			Agent:        "agent-b",
+			Dependencies: []string{"task-a"},
+			Outputs:      []config.OutputConfig{{Name: "step", Type: "string"}},
+		})
+		dag.AddTask(taskA)
+		dag.AddTask(taskB)
+
+		tasks, err := dag.Linearize()
+		if err != nil {
+			t.Fatalf("iteration %d: linearize failed: %v", iteration, err)
+		}
+
+		// Inject previous iteration outputs
+		if lastOutputs != nil {
+			for _, tk := range tasks {
+				for k, v := range lastOutputs {
+					tk.SetInput(k, v)
+				}
+			}
+		}
+
+		for _, tk := range tasks {
+			runtime := agents[tk.Agent()]
+			if err := executor.Execute(context.Background(), tk, runtime); err != nil {
+				t.Fatalf("iteration %d: task %s failed: %v", iteration, tk.Name(), err)
+			}
+		}
+
+		// Collect outputs for next iteration
+		lastOutputs = make(map[string]interface{})
+		for _, tk := range tasks {
+			for k, v := range tk.GetOutputs() {
+				lastOutputs[k] = v
+			}
+		}
+
+		// Verify both tasks completed this iteration
+		for _, tk := range tasks {
+			if tk.GetStatus() != "completed" {
+				t.Errorf("iteration %d: expected %s completed, got %s", iteration, tk.Name(), tk.GetStatus())
+			}
+		}
+	}
+
+	// Verify all 4 responses were consumed
+	if mock.CallCount() != 4 {
+		t.Errorf("expected 4 provider calls (2 iterations × 2 tasks), got %d", mock.CallCount())
+	}
+
+	// Verify outputs from final iteration propagated
+	if lastOutputs["step"] != "second-b" {
+		t.Errorf("expected final output step='second-b', got %v", lastOutputs["step"])
 	}
 }
 

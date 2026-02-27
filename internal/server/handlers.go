@@ -10,11 +10,11 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/cadre-oss/cadre/internal/agent"
-	"github.com/cadre-oss/cadre/internal/config"
-	"github.com/cadre-oss/cadre/internal/crew"
-	"github.com/cadre-oss/cadre/internal/event"
-	"github.com/cadre-oss/cadre/internal/state"
+	"github.com/stxkxs/cadre/internal/agent"
+	"github.com/stxkxs/cadre/internal/config"
+	"github.com/stxkxs/cadre/internal/crew"
+	"github.com/stxkxs/cadre/internal/event"
+	"github.com/stxkxs/cadre/internal/state"
 	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
 )
@@ -318,6 +318,10 @@ func (s *Server) handleCreateCrew(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, http.StatusBadRequest, "crew name is required")
 		return
 	}
+	if err := config.ValidateCrew(&cfg); err != nil {
+		jsonError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	if err := writeYAML("crews", cfg.Name, cfg); err != nil {
 		jsonError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -333,6 +337,10 @@ func (s *Server) handleUpdateCrew(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cfg.Name = name
+	if err := config.ValidateCrew(&cfg); err != nil {
+		jsonError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	if err := writeYAML("crews", name, cfg); err != nil {
 		jsonError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -351,8 +359,15 @@ func (s *Server) handleDeleteCrew(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleValidateCrew(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
-	_, err := config.LoadCrew(name)
+	cfg, err := config.LoadCrew(name)
 	if err != nil {
+		jsonResponse(w, http.StatusOK, map[string]interface{}{
+			"valid":  false,
+			"errors": []string{err.Error()},
+		})
+		return
+	}
+	if err := config.ValidateCrew(cfg); err != nil {
 		jsonResponse(w, http.StatusOK, map[string]interface{}{
 			"valid":  false,
 			"errors": []string{err.Error()},

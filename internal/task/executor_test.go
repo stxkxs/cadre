@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cadre-oss/cadre/internal/config"
-	"github.com/cadre-oss/cadre/internal/testutil"
+	"github.com/stxkxs/cadre/internal/config"
+	"github.com/stxkxs/cadre/internal/testutil"
 )
 
 func TestParseOutputs_JSONBlock(t *testing.T) {

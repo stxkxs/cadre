@@ -8,12 +8,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cadre-oss/cadre/internal/agent"
-	"github.com/cadre-oss/cadre/internal/config"
-	"github.com/cadre-oss/cadre/internal/provider"
-	"github.com/cadre-oss/cadre/internal/state"
-	"github.com/cadre-oss/cadre/internal/telemetry"
-	"github.com/cadre-oss/cadre/internal/testutil"
+	"github.com/stxkxs/cadre/internal/agent"
+	"github.com/stxkxs/cadre/internal/config"
+	"github.com/stxkxs/cadre/internal/provider"
+	"github.com/stxkxs/cadre/internal/state"
+	"github.com/stxkxs/cadre/internal/telemetry"
+	"github.com/stxkxs/cadre/internal/testutil"
 )
 
 // makeHierarchicalSetup creates a standard test setup for hierarchical tests.

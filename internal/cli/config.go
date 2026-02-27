@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cadre-oss/cadre/internal/config"
+	"github.com/stxkxs/cadre/internal/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"

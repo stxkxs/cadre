@@ -3,13 +3,14 @@ package crew
 import (
 	"context"
 	"fmt"
+	"strings"
 
-	"github.com/cadre-oss/cadre/internal/agent"
-	"github.com/cadre-oss/cadre/internal/config"
-	"github.com/cadre-oss/cadre/internal/event"
-	"github.com/cadre-oss/cadre/internal/state"
-	"github.com/cadre-oss/cadre/internal/task"
-	"github.com/cadre-oss/cadre/internal/telemetry"
+	"github.com/stxkxs/cadre/internal/agent"
+	"github.com/stxkxs/cadre/internal/config"
+	"github.com/stxkxs/cadre/internal/event"
+	"github.com/stxkxs/cadre/internal/state"
+	"github.com/stxkxs/cadre/internal/task"
+	"github.com/stxkxs/cadre/internal/telemetry"
 )
 
 // Orchestrator coordinates crew execution
@@ -108,9 +109,15 @@ func NewOrchestrator(cfg *config.Config, crewCfg *config.CrewConfig, stateMgr *s
 		}
 	}
 
-	// Validate DAG
-	if err := o.dag.Validate(); err != nil {
-		return nil, fmt.Errorf("invalid task graph: %w", err)
+	// Validate DAG — when max_iterations is set, allow cycles.
+	if crewCfg.MaxIterations > 0 {
+		if err := o.dag.ValidateDeps(); err != nil {
+			return nil, fmt.Errorf("invalid task graph: %w", err)
+		}
+	} else {
+		if err := o.dag.Validate(); err != nil {
+			return nil, fmt.Errorf("invalid task graph: %w", err)
+		}
 	}
 
 	return o, nil
@@ -155,17 +162,21 @@ func (o *Orchestrator) Execute(ctx context.Context, inputs map[string]interface{
 		"process": o.crewConfig.Process,
 	}))
 
-	// Execute based on process type
+	// Execute based on process type (iterative mode overrides when max_iterations > 0)
 	var result map[string]interface{}
-	switch o.crewConfig.Process {
-	case "sequential", "":
-		result, err = o.executeSequential(ctx)
-	case "parallel":
-		result, err = o.executeParallel(ctx)
-	case "hierarchical":
-		result, err = o.executeHierarchical(ctx)
-	default:
-		return nil, fmt.Errorf("unknown process type: %s", o.crewConfig.Process)
+	if o.crewConfig.MaxIterations > 0 {
+		result, err = o.executeIterative(ctx)
+	} else {
+		switch o.crewConfig.Process {
+		case "sequential", "":
+			result, err = o.executeSequential(ctx)
+		case "parallel":
+			result, err = o.executeParallel(ctx)
+		case "hierarchical":
+			result, err = o.executeHierarchical(ctx)
+		default:
+			return nil, fmt.Errorf("unknown process type: %s", o.crewConfig.Process)
+		}
 	}
 
 	if err != nil {
@@ -250,6 +261,136 @@ func (o *Orchestrator) executeSequential(ctx context.Context) (map[string]interf
 	}
 
 	return outputs, nil
+}
+
+// executeIterative runs tasks in a loop for cyclic workflows.
+// Each iteration executes all tasks in linearized order, carrying outputs
+// from previous iterations as inputs to the next.
+func (o *Orchestrator) executeIterative(ctx context.Context) (map[string]interface{}, error) {
+	maxIter := o.crewConfig.MaxIterations
+	errorStrategy := o.crewConfig.ErrorStrategy
+
+	// Track iteration metadata in run state
+	o.stateMgr.SetMetadata("max_iterations", maxIter)
+
+	var lastOutputs map[string]interface{}
+
+	for iteration := 1; iteration <= maxIter; iteration++ {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+		}
+
+		o.stateMgr.SetMetadata("current_iteration", iteration)
+		o.logger.Info("Starting iteration", "crew", o.crewConfig.Name, "iteration", iteration, "max", maxIter)
+
+		o.eventBus.Emit(event.NewEvent("crew.iteration.started", map[string]interface{}{
+			"crew":      o.crewConfig.Name,
+			"iteration": iteration,
+			"max":       maxIter,
+		}))
+
+		// Get execution order (handles cycles)
+		tasks, err := o.dag.Linearize()
+		if err != nil {
+			return nil, fmt.Errorf("failed to linearize task graph: %w", err)
+		}
+
+		// Inject previous iteration outputs as inputs
+		if lastOutputs != nil {
+			for _, t := range tasks {
+				for k, v := range lastOutputs {
+					t.SetInput(k, v)
+				}
+			}
+		}
+
+		var iterationErrors []error
+		for _, t := range tasks {
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			default:
+			}
+
+			runtime, ok := o.agents[t.Agent()]
+			if !ok {
+				return nil, fmt.Errorf("agent not found for task %s: %s", t.Name(), t.Agent())
+			}
+
+			// Propagate outputs from dependencies within this iteration
+			for _, depName := range o.dag.GetDependencies(t.Name()) {
+				depTask, _ := o.dag.GetTask(depName)
+				if depTask.GetStatus() == "completed" {
+					for k, v := range depTask.GetOutputs() {
+						if k != "_response" {
+							t.SetInput(k, v)
+						}
+					}
+				}
+			}
+
+			o.stateMgr.UpdateTaskState(t.Name(), "running", nil, nil)
+			o.eventBus.Emit(event.NewEvent(event.TaskStarted, map[string]interface{}{
+				"task":      t.Name(),
+				"agent":     t.Agent(),
+				"iteration": iteration,
+			}))
+
+			err := o.executor.Execute(ctx, t, runtime)
+			if err != nil {
+				o.stateMgr.UpdateTaskState(t.Name(), "failed", nil, err)
+				o.eventBus.Emit(event.NewEvent(event.TaskFailed, map[string]interface{}{
+					"task":      t.Name(),
+					"error":     err.Error(),
+					"iteration": iteration,
+				}))
+				taskErr := fmt.Errorf("task %s failed on iteration %d: %w", t.Name(), iteration, err)
+
+				if errorStrategy == "continue-all" {
+					iterationErrors = append(iterationErrors, taskErr)
+					continue
+				}
+				// fail-fast (default) and complete-running (same as fail-fast for sequential)
+				return nil, taskErr
+			}
+
+			o.stateMgr.UpdateTaskState(t.Name(), "completed", t.GetOutputs(), nil)
+			o.eventBus.Emit(event.NewEvent(event.TaskCompleted, map[string]interface{}{
+				"task":      t.Name(),
+				"iteration": iteration,
+			}))
+		}
+
+		if len(iterationErrors) > 0 {
+			msgs := make([]string, len(iterationErrors))
+			for i, e := range iterationErrors {
+				msgs[i] = e.Error()
+			}
+			return nil, fmt.Errorf("iteration %d had %d errors: %s", iteration, len(iterationErrors), strings.Join(msgs, "; "))
+		}
+
+		o.eventBus.Emit(event.NewEvent("crew.iteration.completed", map[string]interface{}{
+			"crew":      o.crewConfig.Name,
+			"iteration": iteration,
+		}))
+
+		// Save outputs from all tasks before reset
+		lastOutputs = make(map[string]interface{})
+		for _, t := range tasks {
+			for k, v := range t.GetOutputs() {
+				lastOutputs[k] = v
+			}
+		}
+
+		// Reset DAG for next iteration (unless this is the last one)
+		if iteration < maxIter {
+			o.dag.Reset()
+		}
+	}
+
+	return lastOutputs, nil
 }
 
 // executeParallel runs independent tasks concurrently

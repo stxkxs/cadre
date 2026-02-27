@@ -1,8 +1,8 @@
 package agent
 
 import (
-	"github.com/cadre-oss/cadre/internal/config"
-	"github.com/cadre-oss/cadre/internal/provider"
+	"github.com/stxkxs/cadre/internal/config"
+	"github.com/stxkxs/cadre/internal/provider"
 )
 
 // Agent represents an AI agent with a role and capabilities

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cadre-oss/cadre/internal/agent"
+	"github.com/stxkxs/cadre/internal/agent"
 )
 
 func TestMemoryPersistenceAcrossRuns(t *testing.T) {

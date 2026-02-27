@@ -21,7 +21,7 @@ Initialize and configure a new cadre project for AI agent orchestration.
 
 ```bash
 # Clone and build
-git clone https://github.com/cadre-oss/cadre.git
+git clone https://github.com/stxkxs/cadre.git
 cd cadre
 make build
 

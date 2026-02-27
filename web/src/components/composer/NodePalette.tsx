@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { GripVertical, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAgents } from '@/hooks/useAgents'
@@ -8,11 +9,11 @@ interface NodePaletteProps {
 
 export function NodePalette({ onAddTask }: NodePaletteProps) {
   const { data: agents } = useAgents()
-  let counter = 1
+  const counter = useRef(1)
 
   const handleAdd = () => {
-    const name = `task-${counter++}`
-    onAddTask(name, agents?.[0]?.name || '')
+    const name = `task-${counter.current++}`
+    onAddTask(name, '')  // empty agent — user assigns later
   }
 
   return (

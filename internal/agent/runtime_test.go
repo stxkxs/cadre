@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cadre-oss/cadre/internal/config"
-	"github.com/cadre-oss/cadre/internal/provider"
-	"github.com/cadre-oss/cadre/internal/testutil"
+	"github.com/stxkxs/cadre/internal/config"
+	"github.com/stxkxs/cadre/internal/provider"
+	"github.com/stxkxs/cadre/internal/testutil"
 )
 
 func TestRuntime_Execute_DirectResponse(t *testing.T) {

@@ -1,0 +1,46 @@
+categories:
+  - id: backend
+    label: "Backend Development"
+    icon: "server"
+  - id: frontend
+    label: "Frontend Development"
+    icon: "monitor"
+  - id: qa
+    label: "Quality Assurance"
+    icon: "test-tube"
+  - id: security
+    label: "Security"
+    icon: "shield"
+  - id: devops
+    label: "DevOps & Infrastructure"
+    icon: "cloud"
+  - id: kubernetes
+    label: "Kubernetes"
+    icon: "container"
+  - id: architecture
+    label: "Architecture & Docs"
+    icon: "file-text"
+  - id: general
+    label: "General Purpose"
+    icon: "sparkles"
+
+agents:
+  greeter:
+    category: general
+    complexity: beginner
+  poet:
+    category: general
+    complexity: beginner
+
+tasks:
+  create-greeting:
+    category: general
+    complexity: beginner
+  poetize:
+    category: general
+    complexity: beginner
+
+crews:
+  greeting-crew:
+    category: general
+    complexity: beginner

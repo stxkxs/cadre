@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/cadre-oss/cadre/internal/provider"
+	"github.com/stxkxs/cadre/internal/provider"
 	_ "github.com/mattn/go-sqlite3"
 )
 

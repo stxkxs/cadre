@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cadre-oss/cadre/internal/provider"
+	"github.com/stxkxs/cadre/internal/provider"
 )
 
 func TestParseStream_TextOnly(t *testing.T) {

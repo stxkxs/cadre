@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/cadre-oss/cadre/internal/provider"
-	"github.com/cadre-oss/cadre/internal/testutil"
+	"github.com/stxkxs/cadre/internal/provider"
+	"github.com/stxkxs/cadre/internal/testutil"
 )
 
 func TestStreamExecute_TextOnly(t *testing.T) {

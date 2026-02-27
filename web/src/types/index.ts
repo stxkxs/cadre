@@ -83,6 +83,7 @@ export interface Crew {
   process: 'sequential' | 'parallel' | 'hierarchical'
   concurrency?: number
   error_strategy?: string
+  max_iterations?: number
   tasks: CrewTask[]
   manager?: string
 }
@@ -91,6 +92,11 @@ export interface CrewTask {
   name: string
   agent: string
   depends_on?: string[]
+  description?: string
+  timeout?: string
+  retry?: RetryConfig
+  inputs?: TaskInput[]
+  outputs?: TaskOutput[]
 }
 
 // Run types
@@ -104,6 +110,7 @@ export interface Run {
   tasks: TaskState[]
   inputs?: Record<string, unknown>
   outputs?: Record<string, unknown>
+  metadata?: Record<string, unknown>
 }
 
 export interface TaskState {
@@ -114,6 +121,8 @@ export interface TaskState {
   completed_at?: string
   error?: string
   attempts: number
+  inputs?: Record<string, unknown>
+  outputs?: Record<string, unknown>
 }
 
 // Tool types
@@ -142,4 +151,61 @@ export interface ChatMessage {
 export interface ValidationResult {
   valid: boolean
   errors: string[]
+}
+
+// Template types
+export interface TemplateCategory {
+  id: string
+  label: string
+  icon: string
+}
+
+export interface TemplateMeta {
+  category: string
+  complexity: 'beginner' | 'intermediate' | 'advanced'
+}
+
+export interface TemplateAgent {
+  name: string
+  role: string
+  goal: string
+  backstory: string
+  tools: string[]
+  memory: MemoryConfig
+  meta: TemplateMeta
+}
+
+export interface TemplateTask {
+  name: string
+  description: string
+  agent: string
+  inputs: TaskInput[]
+  outputs: TaskOutput[]
+  dependencies: string[]
+  timeout: string
+  retry: RetryConfig
+  meta: TemplateMeta
+}
+
+export interface TemplateCrew {
+  name: string
+  description: string
+  agents: string[]
+  process: string
+  tasks: CrewTask[]
+  meta: TemplateMeta
+}
+
+export interface ImportRequest {
+  type: 'agent' | 'task' | 'crew'
+  name: string
+  overrides?: Record<string, unknown>
+}
+
+export interface OnboardingStatus {
+  showOnboarding: boolean
+  hasAgents: boolean
+  hasTasks: boolean
+  hasCrews: boolean
+  hasRuns: boolean
 }

@@ -123,7 +123,7 @@ mcp_servers:
 // tools/custom/mytool.go
 package custom
 
-import "github.com/cadre-oss/cadre/pkg/tool"
+import "github.com/stxkxs/cadre/pkg/tool"
 
 type MyTool struct{}
 

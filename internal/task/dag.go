@@ -3,7 +3,7 @@ package task
 import (
 	"fmt"
 
-	cadreErrors "github.com/cadre-oss/cadre/internal/errors"
+	cadreErrors "github.com/stxkxs/cadre/internal/errors"
 )
 
 // DAG represents a directed acyclic graph of tasks
@@ -200,6 +200,96 @@ func (d *DAG) HasFailures() bool {
 		}
 	}
 	return false
+}
+
+// HasCycles returns true if the graph contains any cycles.
+func (d *DAG) HasCycles() bool {
+	visited := make(map[string]bool)
+	recStack := make(map[string]bool)
+
+	var dfs func(name string) bool
+	dfs = func(name string) bool {
+		visited[name] = true
+		recStack[name] = true
+		for _, dep := range d.deps[name] {
+			if !visited[dep] {
+				if dfs(dep) {
+					return true
+				}
+			} else if recStack[dep] {
+				return true
+			}
+		}
+		recStack[name] = false
+		return false
+	}
+
+	for name := range d.tasks {
+		if !visited[name] {
+			if dfs(name) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// ValidateDeps checks that all dependency references point to existing tasks.
+// Unlike Validate(), it does not reject cycles.
+func (d *DAG) ValidateDeps() error {
+	for name, deps := range d.deps {
+		for _, dep := range deps {
+			if _, exists := d.tasks[dep]; !exists {
+				return fmt.Errorf("task %s depends on unknown task %s", name, dep)
+			}
+		}
+	}
+	return nil
+}
+
+// Linearize returns tasks in an execution order that handles cycles.
+// Back-edges (edges that form cycles) are skipped during DFS so that
+// the result respects forward edges while breaking loops.
+// If the graph has no cycles, it falls back to TopologicalSort.
+func (d *DAG) Linearize() ([]*Task, error) {
+	if !d.HasCycles() {
+		return d.TopologicalSort()
+	}
+
+	const (
+		white = 0
+		gray  = 1
+		black = 2
+	)
+	color := make(map[string]int)
+	var order []*Task
+
+	var dfs func(name string)
+	dfs = func(name string) {
+		color[name] = gray
+		for _, dep := range d.deps[name] {
+			if color[dep] == white {
+				dfs(dep)
+			}
+			// gray = back-edge (cycle), skip
+		}
+		color[name] = black
+		order = append(order, d.tasks[name])
+	}
+
+	// Visit all nodes
+	for name := range d.tasks {
+		if color[name] == white {
+			dfs(name)
+		}
+	}
+
+	// Reverse for correct execution order (dependencies before dependents)
+	for i, j := 0, len(order)-1; i < j; i, j = i+1, j-1 {
+		order[i], order[j] = order[j], order[i]
+	}
+
+	return order, nil
 }
 
 // Reset resets all tasks to pending status

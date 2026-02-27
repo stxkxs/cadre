@@ -39,6 +39,19 @@ export const TaskNode = memo(function TaskNode({ data, selected }: TaskNodeProps
         {data.description && (
           <p className="text-[10px] text-muted-foreground line-clamp-2">{data.description}</p>
         )}
+        {(data.timeout || (data.retry?.max_attempts && data.retry.max_attempts > 0) || data.inputs?.length || data.outputs?.length) && (
+          <div className="flex items-center gap-2 mt-1 text-[9px] text-muted-foreground">
+            {data.timeout && (
+              <span className="flex items-center gap-0.5" title="Timeout">&#9201; {data.timeout}</span>
+            )}
+            {data.retry?.max_attempts && data.retry.max_attempts > 0 && (
+              <span className="flex items-center gap-0.5" title="Retry">&#8635; {data.retry.max_attempts}</span>
+            )}
+            {(data.inputs?.length || data.outputs?.length) && (
+              <span>{data.inputs?.length || 0} in / {data.outputs?.length || 0} out</span>
+            )}
+          </div>
+        )}
       </div>
 
       <Handle type="source" position={Position.Bottom} className="!bg-[var(--primary-accent)] !w-2.5 !h-2.5 !border-2 !border-card" />

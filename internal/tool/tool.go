@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	cadreErrors "github.com/cadre-oss/cadre/internal/errors"
+	cadreErrors "github.com/stxkxs/cadre/internal/errors"
 )
 
 // Tool represents a capability an agent can invoke

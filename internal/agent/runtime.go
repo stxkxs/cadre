@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cadre-oss/cadre/internal/config"
-	cadreErrors "github.com/cadre-oss/cadre/internal/errors"
-	"github.com/cadre-oss/cadre/internal/provider"
-	"github.com/cadre-oss/cadre/internal/provider/anthropic"
-	"github.com/cadre-oss/cadre/internal/provider/claudecodesub"
-	"github.com/cadre-oss/cadre/internal/telemetry"
-	"github.com/cadre-oss/cadre/internal/tool"
+	"github.com/stxkxs/cadre/internal/config"
+	cadreErrors "github.com/stxkxs/cadre/internal/errors"
+	"github.com/stxkxs/cadre/internal/provider"
+	"github.com/stxkxs/cadre/internal/provider/anthropic"
+	"github.com/stxkxs/cadre/internal/provider/claudecodesub"
+	"github.com/stxkxs/cadre/internal/telemetry"
+	"github.com/stxkxs/cadre/internal/tool"
 )
 
 // Runtime executes an agent with its tools

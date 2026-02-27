@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cadre-oss/cadre/internal/config"
+	"github.com/stxkxs/cadre/internal/config"
 )
 
 // ClaudeCodeExecutor generates execution plans for Claude Code's Task tool

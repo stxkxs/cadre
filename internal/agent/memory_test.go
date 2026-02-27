@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cadre-oss/cadre/internal/provider"
+	"github.com/stxkxs/cadre/internal/provider"
 )
 
 func TestSQLiteMemoryStore_SaveLoad(t *testing.T) {

@@ -3,7 +3,7 @@ package tool
 import (
 	"fmt"
 
-	"github.com/cadre-oss/cadre/internal/config"
+	"github.com/stxkxs/cadre/internal/config"
 )
 
 // LoadToolsFromConfig creates tools from YAML tool configurations.

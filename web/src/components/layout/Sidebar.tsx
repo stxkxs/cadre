@@ -6,6 +6,7 @@ import {
   Users,
   Workflow,
   Play,
+  BookOpen,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -16,6 +17,7 @@ const links = [
   { to: '/crews', icon: Users, label: 'Crews' },
   { to: '/composer', icon: Workflow, label: 'Composer' },
   { to: '/runs', icon: Play, label: 'Runs' },
+  { to: '/templates', icon: BookOpen, label: 'Templates' },
 ]
 
 export function Sidebar() {

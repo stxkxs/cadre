@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cadre-oss/cadre/internal/config"
-	"github.com/cadre-oss/cadre/internal/state"
+	"github.com/stxkxs/cadre/internal/config"
+	"github.com/stxkxs/cadre/internal/state"
 	"github.com/spf13/cobra"
 )
 
