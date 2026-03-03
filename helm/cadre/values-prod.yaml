@@ -1,0 +1,25 @@
+replicaCount: 3
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+config:
+  CADRE_ENV: "prod"
+  LOG_LEVEL: "warn"
+  NEXTAUTH_URL: "https://cadre.example.com"
+  WEBHOOK_BASE_URL: "https://cadre.example.com/api/webhooks"
+
+ingress:
+  hosts:
+    - host: cadre.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: "" # Set to Bedrock IRSA role ARN

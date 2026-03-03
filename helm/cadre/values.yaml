@@ -1,0 +1,70 @@
+replicaCount: 2
+
+image:
+  repository: cadre
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 3000
+
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/certificate-arn: ""
+  hosts:
+    - host: cadre.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  limits:
+    cpu: "1"
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+# Non-sensitive config (→ ConfigMap)
+config:
+  CADRE_ENV: "prod"
+  NODE_ENV: "production"
+  LOG_LEVEL: "warn"
+  S3_BUCKET: "cadre-artifacts"
+  AWS_REGION: "us-east-1"
+  NEXTAUTH_URL: "https://cadre.example.com"
+  DB_POOL_SIZE: "10"
+  NEXT_TELEMETRY_DISABLED: "1"
+  WEBHOOK_BASE_URL: "https://cadre.example.com/api/webhooks"
+
+# Sensitive config (→ Secret)
+secrets:
+  DATABASE_URL: ""
+  REDIS_URL: ""
+  AUTH_SECRET: ""
+  AUTH_GITHUB_ID: ""
+  AUTH_GITHUB_SECRET: ""
+  ENCRYPTION_SECRET: ""
+  WEBHOOK_SECRET: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT:role/cadre-bedrock-role
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
