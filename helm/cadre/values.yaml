@@ -1,0 +1,54 @@
+replicaCount: 2
+
+image:
+  repository: cadre
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 3000
+
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/certificate-arn: ""
+  hosts:
+    - host: cadre.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  limits:
+    cpu: "1"
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+env:
+  DATABASE_URL: ""
+  REDIS_URL: ""
+  AUTH_SECRET: ""
+  AUTH_GITHUB_ID: ""
+  AUTH_GITHUB_SECRET: ""
+  ENCRYPTION_SECRET: ""
+  S3_BUCKET: "cadre-artifacts"
+  AWS_REGION: "us-east-1"
+  NEXTAUTH_URL: "https://cadre.example.com"
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

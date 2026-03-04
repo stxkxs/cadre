@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+  labels:
+    app: cadre
+    release: {{ .Release.Name }}
+data:
+  S3_BUCKET: {{ .Values.env.S3_BUCKET | quote }}
+  AWS_REGION: {{ .Values.env.AWS_REGION | quote }}
+  NEXTAUTH_URL: {{ .Values.env.NEXTAUTH_URL | quote }}
+  NODE_ENV: "production"
+  DB_POOL_SIZE: {{ .Values.env.DB_POOL_SIZE | default "10" | quote }}
+  NEXT_TELEMETRY_DISABLED: "1"
