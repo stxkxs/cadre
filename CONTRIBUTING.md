@@ -2,11 +2,17 @@
 
 Thanks for your interest in contributing! Here's how to get started.
 
+## Prerequisites
+
+- Node.js 20+
+- PostgreSQL 16+
+- pnpm
+
 ## Development Setup
 
 1. **Fork and clone** the repository
 2. **Install dependencies**: `pnpm install`
-3. **Set up environment**: `cp .env.example .env` and fill in values
+3. **Set up environment**: `cp .env.example .env` and fill in values (see [README.md](README.md#2-configure-environment))
 4. **Start PostgreSQL**: Docker, local install, or managed service
 5. **Push schema**: `pnpm db:push`
 6. **Run dev server**: `pnpm dev`
