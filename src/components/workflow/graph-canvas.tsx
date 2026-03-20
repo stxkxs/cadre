@@ -26,6 +26,7 @@ import InputNode from './node-types/input-node';
 import OutputNode from './node-types/output-node';
 import ParallelNode from './node-types/parallel-node';
 import LoopNode from './node-types/loop-node';
+import IntegrationNode from './node-types/integration-node';
 import ConditionalEdge from './edge-types/conditional-edge';
 import { useWorkflowStore } from '@/lib/store/workflow-store';
 import type { WorkflowNode } from '@/lib/engine/types';
@@ -40,6 +41,7 @@ const nodeTypes = {
   output: OutputNode,
   parallel: ParallelNode,
   loop: LoopNode,
+  integration: IntegrationNode,
 };
 
 const edgeTypes = {
@@ -396,6 +398,7 @@ function GraphCanvasInner({ onNodeSelect }: GraphCanvasProps) {
               case 'output': return '#0AEFB7';
               case 'parallel': return '#6366f1';
               case 'loop': return '#ec4899';
+              case 'integration': return '#6366f1';
               default: return '#1E293B';
             }
           }}

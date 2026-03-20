@@ -120,6 +120,14 @@ export class Graph {
       if (node.type === 'condition' && !node.data.condition) {
         errors.push(`Condition node "${node.data.label}" must have a condition expression`);
       }
+      if (node.type === 'integration') {
+        if (!node.data.integrationId) {
+          errors.push(`Integration node "${node.data.label}" must have an integration selected`);
+        }
+        if (!node.data.integrationAction) {
+          errors.push(`Integration node "${node.data.label}" must have an action selected`);
+        }
+      }
     }
 
     return { valid: errors.length === 0, errors };

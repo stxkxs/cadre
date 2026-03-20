@@ -9,7 +9,16 @@
     "url": "https://github.com/stxkxs/cadre.git"
   },
   "homepage": "https://github.com/stxkxs/cadre",
-  "keywords": ["ai", "agents", "workflow", "orchestration", "llm", "claude", "openai", "groq"],
+  "keywords": [
+    "ai",
+    "agents",
+    "workflow",
+    "orchestration",
+    "llm",
+    "claude",
+    "openai",
+    "groq"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -27,6 +36,8 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
     "@auth/drizzle-adapter": "^1.11.1",
+    "@aws-sdk/client-bedrock": "^3.1013.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.1013.0",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-dialog": "^1.1.15",

@@ -1,10 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}-cadre
+  name: {{ include "cadre.fullname" . }}
   labels:
-    app: cadre
-    release: {{ .Release.Name }}
+    {{- include "cadre.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -12,5 +11,4 @@ spec:
       targetPort: 3000
       protocol: TCP
   selector:
-    app: cadre
-    release: {{ .Release.Name }}
+    {{- include "cadre.selectorLabels" . | nindent 4 }}

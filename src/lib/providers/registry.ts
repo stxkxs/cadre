@@ -4,6 +4,7 @@ import { AnthropicProvider } from './anthropic';
 import { OpenAIProvider } from './openai';
 import { GroqProvider } from './groq';
 import { ClaudeCodeProvider } from './claude-code';
+import { BedrockProvider } from './bedrock';
 
 class ProviderRegistry {
   private providers = new Map<ModelProvider, BaseProvider>();
@@ -13,6 +14,7 @@ class ProviderRegistry {
     this.register(new OpenAIProvider());
     this.register(new GroqProvider());
     this.register(new ClaudeCodeProvider());
+    this.register(new BedrockProvider());
   }
 
   private register(provider: BaseProvider) {

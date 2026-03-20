@@ -1,22 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-cadre
+  name: {{ include "cadre.fullname" . }}
   labels:
-    app: cadre
-    release: {{ .Release.Name }}
+    {{- include "cadre.labels" . | nindent 4 }}
 spec:
+  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
-      app: cadre
-      release: {{ .Release.Name }}
+      {{- include "cadre.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: cadre
-        release: {{ .Release.Name }}
+        {{- include "cadre.selectorLabels" . | nindent 8 }}
     spec:
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ include "cadre.fullname" . }}
+      {{- end }}
       containers:
         - name: cadre
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

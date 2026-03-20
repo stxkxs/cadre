@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { Brain, Sparkles, Zap, Terminal, Check, X, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Brain, Sparkles, Zap, Terminal, Cloud, Check, X, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useSettingsStore } from '@/lib/store/settings-store';
 import { toast } from '@/components/ui/use-toast';
 import type { ModelProvider } from '@/lib/engine/types';
@@ -18,6 +18,7 @@ const providers: { id: ModelProvider; name: string; icon: React.ElementType; pla
   { id: 'openai', name: 'OpenAI (ChatGPT)', icon: Sparkles, placeholder: 'sk-...', color: 'text-green-400' },
   { id: 'groq', name: 'Groq (Llama)', icon: Zap, placeholder: 'gsk_...', color: 'text-purple-400' },
   { id: 'claude-code', name: 'Claude Code', icon: Terminal, placeholder: '', color: 'text-blue-400', noApiKey: true },
+  { id: 'bedrock', name: 'AWS Bedrock', icon: Cloud, placeholder: '', color: 'text-amber-400', noApiKey: true },
 ];
 
 export default function SettingsPage() {

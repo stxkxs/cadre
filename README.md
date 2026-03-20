@@ -26,7 +26,8 @@ Cadre is a graph-based workflow builder for designing and running multi-step AI 
 ## Features
 
 - **Visual graph editor** — drag-and-drop nodes, snap-to-grid, minimap, undo/redo
-- **4 AI providers** — Anthropic (Claude), OpenAI (GPT-4o), Groq (Llama), Claude Code (CLI)
+- **5 AI providers** — Anthropic (Claude), OpenAI (GPT-4o), Groq (Llama), Claude Code (CLI), AWS Bedrock (dynamic model discovery)
+- **10 integrations** — GitHub, Linear, Notion, Slack, Figma, Jira, Confluence, Google Docs, Loom, Coda — with OAuth, webhook triggers, and bidirectional actions
 - **Parallel execution** — branches run concurrently with automatic merge
 - **Conditional routing** — evaluate expressions to route between branches
 - **Live monitoring** — SSE streaming of node outputs during execution
@@ -43,34 +44,38 @@ Cadre is a graph-based workflow builder for designing and running multi-step AI 
 ### Prerequisites
 
 - Node.js 20+
-- PostgreSQL 16+
 - pnpm
+- [Task](https://taskfile.dev/installation/) (task runner)
+- Docker (for local Postgres + Redis)
 
-### 1. Clone and install
+### 1. Clone and setup
 
 ```bash
 git clone https://github.com/stxkxs/cadre.git
 cd cadre
-pnpm install
+task setup    # installs deps, creates .env.local, starts Postgres + Redis, runs migrations
 ```
+
+This runs `pnpm install`, copies `.env.example` → `.env.local`, boots the Docker containers, and migrates the database — all in one command.
 
 ### 2. Configure environment
 
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with your values:
+Edit `.env.local` with your values (generate secrets with `task gen:secret`):
 
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `DATABASE_URL` | PostgreSQL connection string | Yes |
-| `AUTH_SECRET` | NextAuth session secret (generate with `openssl rand -base64 32`) | Yes |
+| `AUTH_SECRET` | NextAuth session secret | Yes |
 | `AUTH_GITHUB_ID` | GitHub OAuth app client ID | Yes |
 | `AUTH_GITHUB_SECRET` | GitHub OAuth app client secret | Yes |
-| `ENCRYPTION_SECRET` | API key encryption secret (generate with `openssl rand -base64 32`) | Yes |
+| `ENCRYPTION_SECRET` | API key encryption secret | Yes |
 | `NEXTAUTH_URL` | App URL (default: `http://localhost:3000`) | No |
 | `DB_POOL_SIZE` | Database connection pool size (default: `10`) | No |
+| `CADRE_ENV` | Environment: `local`, `dev`, `staging`, `prod` (default: `local`) | No |
+| `AWS_REGION` | AWS region for Bedrock (default: `us-east-1`) | No |
+| `REDIS_URL` | Redis connection string | No |
+| `WEBHOOK_BASE_URL` | Public URL for webhook callbacks | No |
+| `WEBHOOK_SECRET` | HMAC secret for verifying incoming webhooks | No |
 
 See [`.env.example`](.env.example) for all available variables.
 
@@ -79,20 +84,19 @@ See [`.env.example`](.env.example) for all available variables.
 1. Go to [GitHub Developer Settings → OAuth Apps → New OAuth App](https://github.com/settings/developers)
 2. Set **Homepage URL** to `http://localhost:3000`
 3. Set **Authorization callback URL** to `http://localhost:3000/api/auth/callback/github`
-4. Copy the **Client ID** and **Client Secret** into `AUTH_GITHUB_ID` and `AUTH_GITHUB_SECRET` in your `.env`
+4. Copy the **Client ID** and **Client Secret** into `AUTH_GITHUB_ID` and `AUTH_GITHUB_SECRET` in `.env.local`
 
-### 4. Initialize database and start
+### 4. Start developing
 
 ```bash
-pnpm db:push   # Push schema to PostgreSQL
-pnpm dev       # Start development server
+task up    # starts Postgres + Redis, then the Next.js dev server
 ```
 
 Open [http://localhost:3000](http://localhost:3000) and sign in with GitHub.
 
 ### 5. Add your API keys
 
-Go to **Settings** (gear icon in sidebar) and add API keys for the providers you want to use: Anthropic, OpenAI, and/or Groq. Keys are encrypted at rest with AES-256-GCM.
+Go to **Settings** (gear icon in sidebar) and add API keys for the providers you want to use: Anthropic, OpenAI, and/or Groq. Keys are encrypted at rest with AES-256-GCM. Bedrock uses AWS credential chain (no API key needed). Connect external services on the **Integrations** page.
 
 ### 6. Your first workflow
 
@@ -112,6 +116,7 @@ Go to **Settings** (gear icon in sidebar) and add API keys for the providers you
 | **Loop** | Repeats a downstream branch up to N iterations while a condition holds. | Max iterations (up to 10), condition expression |
 | **Parallel** | Runs all downstream branches concurrently. | Max concurrency |
 | **Output** | Collects the final result of the workflow. | Output format (plain text, JSON, markdown) |
+| **Integration** | Executes an action on an external service (GitHub, Slack, etc.). | Integration, action, parameters (supports `{{node_id_output}}` templates) |
 
 ## Workflow Variables
 
@@ -174,22 +179,7 @@ The **Agent Library** page has **10 pre-built agent presets** (Research Assistan
 
 ## Architecture
 
-```
-User → Graph Editor (React Flow + Zustand)
-         ↓
-       Save → API Routes (Next.js App Router)
-         ↓
-       Execute → Engine
-         ├── Graph (topology, validation)
-         ├── Scheduler (BFS batching, parallel detection)
-         └── Executor (node dispatch, retry, timeout)
-               ↓
-             Provider Registry
-               ├── Anthropic (Claude API)
-               ├── OpenAI (Chat Completions)
-               ├── Groq (Chat Completions)
-               └── Claude Code (CLI subprocess)
-```
+![Cadre Infrastructure](docs/cadre.svg)
 
 **Engine pipeline**: The graph is validated (cycles, missing providers), then topologically sorted. The scheduler walks the graph in BFS order, batching nodes whose predecessors are all complete. Parallel branches execute concurrently via `Promise.all`. Each node has configurable timeout and retry with exponential backoff.
 
@@ -197,34 +187,82 @@ User → Graph Editor (React Flow + Zustand)
 
 ## Deployment
 
-### Docker Compose (local)
+### Docker
 
 ```bash
-docker compose up
+task docker:build    # build the production image
+task docker:run      # run it locally on :3000
 ```
 
 ### Kubernetes (Helm)
 
 ```bash
-helm install cadre ./helm/cadre \
-  --set env.DATABASE_URL="postgresql://..." \
-  --set env.AUTH_SECRET="..." \
-  --set env.AUTH_GITHUB_ID="..." \
-  --set env.AUTH_GITHUB_SECRET="..."
+task helm:lint              # validate the chart
+task helm:template          # dry-run render
+task deploy:template ENV=dev  # dry-run for specific env
+task deploy:dev             # deploy to dev
+task deploy:staging         # deploy to staging
+task deploy:prod            # deploy to production (prompts for confirmation)
 ```
 
-See [`helm/cadre/`](helm/cadre/) for the full chart and configurable values.
+Environment overlays in `helm/cadre/values-{dev,staging,prod}.yaml` configure replicas, HPA, log levels, and domains. The service account supports IRSA for Bedrock access in EKS.
 
-## Development
+## Task Reference
 
-```bash
-pnpm dev          # Start dev server
-pnpm build        # Production build
-pnpm lint         # ESLint
-pnpm test         # Run tests
-pnpm test:watch   # Watch mode
-pnpm db:studio    # Drizzle Studio (database GUI)
-```
+Run `task --list` to see all available tasks. Highlights:
+
+**Development**
+| Command | Description |
+|---------|-------------|
+| `task setup` | First-time bootstrap (install, env, infra, migrate) |
+| `task up` | Start infra + dev server |
+| `task dev` | Next.js dev server only |
+| `task build` | Production build |
+| `task start` | Run production server (after build) |
+
+**Testing & Quality**
+| Command | Description |
+|---------|-------------|
+| `task lint` | ESLint |
+| `task lint:fix` | ESLint with auto-fix |
+| `task test` | Run tests once |
+| `task test:watch` | Watch mode |
+| `task test:coverage` | Tests with coverage report |
+| `task ci` | Full CI pipeline (lint + test + build) |
+
+**Database**
+| Command | Description |
+|---------|-------------|
+| `task db:generate` | Generate migration files from schema changes |
+| `task db:migrate` | Run pending migrations |
+| `task db:push` | Push schema directly (dev only) |
+| `task db:studio` | Open Drizzle Studio (database GUI) |
+| `task db:check` | Verify database connection |
+| `task db:reset` | Drop and recreate database (prompts for confirmation) |
+
+**Infrastructure**
+| Command | Description |
+|---------|-------------|
+| `task infra:up` | Start Postgres + Redis containers |
+| `task infra:down` | Stop containers |
+| `task infra:destroy` | Stop containers and delete volumes (prompts) |
+| `task infra:logs` | Tail container logs |
+| `task infra:ps` | Container status |
+
+**Deployment**
+| Command | Description |
+|---------|-------------|
+| `task deploy:dev` | Deploy to dev environment |
+| `task deploy:staging` | Deploy to staging environment |
+| `task deploy:prod` | Deploy to production (prompts) |
+| `task deploy:template` | Dry-run Helm render for an env (`ENV=dev`) |
+
+**Utilities**
+| Command | Description |
+|---------|-------------|
+| `task gen:secret` | Generate a random base64 secret |
+| `task clean` | Remove build artifacts and caches |
+| `task nuke` | Full clean including node_modules (prompts) |
 
 ## Contributing
 

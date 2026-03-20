@@ -2,13 +2,14 @@ import { describe, it, expect } from 'vitest';
 import { providerRegistry } from '../registry';
 
 describe('ProviderRegistry', () => {
-  it('has all 4 providers registered', () => {
+  it('has all 5 providers registered', () => {
     const ids = providerRegistry.getIds();
     expect(ids).toContain('anthropic');
     expect(ids).toContain('openai');
     expect(ids).toContain('groq');
     expect(ids).toContain('claude-code');
-    expect(ids).toHaveLength(4);
+    expect(ids).toContain('bedrock');
+    expect(ids).toHaveLength(5);
   });
 
   it('returns correct provider instances', () => {
@@ -16,6 +17,7 @@ describe('ProviderRegistry', () => {
     expect(providerRegistry.get('openai').name).toBe('OpenAI');
     expect(providerRegistry.get('groq').name).toBe('Groq');
     expect(providerRegistry.get('claude-code').name).toBe('Claude Code');
+    expect(providerRegistry.get('bedrock').name).toBe('AWS Bedrock');
   });
 
   it('throws for unknown provider', () => {
@@ -33,6 +35,6 @@ describe('ProviderRegistry', () => {
 
   it('getAll returns all provider instances', () => {
     const all = providerRegistry.getAll();
-    expect(all).toHaveLength(4);
+    expect(all).toHaveLength(5);
   });
 });

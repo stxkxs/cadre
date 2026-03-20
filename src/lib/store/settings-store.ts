@@ -31,6 +31,7 @@ export const useSettingsStore = create<SettingsStore>()(
         openai: defaultApiKeyStatus,
         groq: defaultApiKeyStatus,
         'claude-code': defaultApiKeyStatus,
+        bedrock: defaultApiKeyStatus,
       },
 
       setTheme: (theme) => set({ theme }),
