@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { webhookEvents, webhookTriggers, workflows, runs } from '@/lib/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 import { integrationRegistry } from '@/lib/integrations/registry';
 import { getWebhookSecret } from '@/lib/integrations/webhook-secrets';
 import { rateLimit } from '@/lib/rate-limit';
 import { Executor } from '@/lib/engine/executor';
 import { decryptApiKey } from '@/lib/crypto';
+import { logger } from '@/lib/logger';
 import { userApiKeys } from '@/lib/db/schema';
 import type { IntegrationId } from '@/types/integration';
 import type { WorkflowNode, WorkflowEdge } from '@/lib/engine/types';
@@ -79,11 +80,32 @@ export async function POST(
       )
     );
 
-  for (const trigger of triggers) {
-    // Fire workflow in background
-    fireWorkflow(trigger.workflowId, trigger.userId, event.payload, webhookEvent.id).catch(err => {
-      console.error(`[webhook] Failed to fire workflow ${trigger.workflowId}:`, err);
-    });
+  if (triggers.length > 0) {
+    // Batch-fetch all needed workflows and API keys in 2 queries
+    const workflowIds = [...new Set(triggers.map(t => t.workflowId))];
+    const userIds = [...new Set(triggers.map(t => t.userId))];
+
+    const [batchedWorkflows, batchedKeys] = await Promise.all([
+      db.select().from(workflows).where(inArray(workflows.id, workflowIds)),
+      db.select().from(userApiKeys).where(inArray(userApiKeys.userId, userIds)),
+    ]);
+
+    const workflowMap = new Map(batchedWorkflows.map(w => [w.id, w]));
+    const keysByUser = new Map<string, typeof batchedKeys>();
+    for (const key of batchedKeys) {
+      const existing = keysByUser.get(key.userId) || [];
+      existing.push(key);
+      keysByUser.set(key.userId, existing);
+    }
+
+    for (const trigger of triggers) {
+      fireWorkflow(
+        trigger.workflowId, trigger.userId, event.payload, webhookEvent.id,
+        workflowMap.get(trigger.workflowId), keysByUser.get(trigger.userId) || []
+      ).catch(err => {
+        logger.error('Failed to fire workflow from webhook', { workflowId: trigger.workflowId, error: String(err) });
+      });
+    }
   }
 
   // Update event status
@@ -99,24 +121,27 @@ async function fireWorkflow(
   workflowId: string,
   userId: string,
   webhookPayload: Record<string, unknown>,
-  eventId: string
+  eventId: string,
+  prefetchedWorkflow?: typeof workflows.$inferSelect,
+  prefetchedKeys?: (typeof userApiKeys.$inferSelect)[]
 ): Promise<void> {
-  const [workflow] = await db
+  const workflow = prefetchedWorkflow ?? (await db
     .select()
     .from(workflows)
-    .where(and(eq(workflows.id, workflowId), eq(workflows.userId, userId)));
+    .where(and(eq(workflows.id, workflowId), eq(workflows.userId, userId)))
+  )[0];
 
-  if (!workflow) return;
+  if (!workflow || workflow.userId !== userId) return;
 
   const graphData = workflow.graphData as { nodes: WorkflowNode[]; edges: WorkflowEdge[] };
 
-  // Fetch API keys
-  const keys = await db.select().from(userApiKeys).where(eq(userApiKeys.userId, userId));
+  // Use pre-fetched keys or fetch individually
+  const keys = prefetchedKeys ?? await db.select().from(userApiKeys).where(eq(userApiKeys.userId, userId));
   const apiKeys: Record<string, string> = {};
   for (const key of keys) {
     try {
       apiKeys[key.provider] = decryptApiKey(key.encryptedKey, key.iv, key.authTag, userId);
-    } catch { /* skip */ }
+    } catch (err) { logger.warn('Failed to decrypt API key', { provider: key.provider, userId, error: String(err) }); }
   }
 
   const [run] = await db

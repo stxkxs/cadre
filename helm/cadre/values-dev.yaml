@@ -1,3 +1,6 @@
+# Cadre Helm Chart — Dev Environment Overlay
+# Single replica, no autoscaling, debug logging
+
 replicaCount: 1
 
 autoscaling:
@@ -5,7 +8,9 @@ autoscaling:
 
 config:
   CADRE_ENV: "dev"
+  # Debug logging for development visibility
   LOG_LEVEL: "debug"
+  # REQUIRED: Update to your dev domain
   NEXTAUTH_URL: "https://dev.cadre.example.com"
   WEBHOOK_BASE_URL: "https://dev.cadre.example.com/api/webhooks"
 

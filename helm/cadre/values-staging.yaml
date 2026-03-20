@@ -1,3 +1,6 @@
+# Cadre Helm Chart — Staging Environment Overlay
+# Mirrors prod topology at smaller scale for pre-release validation
+
 replicaCount: 2
 
 autoscaling:
@@ -9,6 +12,7 @@ autoscaling:
 config:
   CADRE_ENV: "staging"
   LOG_LEVEL: "info"
+  # REQUIRED: Update to your staging domain
   NEXTAUTH_URL: "https://staging.cadre.example.com"
   WEBHOOK_BASE_URL: "https://staging.cadre.example.com/api/webhooks"
 

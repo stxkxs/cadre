@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { workflows, runs } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { getAuthUserId } from '@/lib/api-auth';
+import { logger } from '@/lib/logger';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -33,7 +34,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[GET /api/workflows/:id]', message);
+    logger.error('Failed to fetch workflow', { route: 'GET /api/workflows/:id', error: message });
     return NextResponse.json({ error: 'Failed to fetch workflow' }, { status: 500 });
   }
 }
@@ -92,7 +93,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[PUT /api/workflows/:id]', message);
+    logger.error('Failed to update workflow', { route: 'PUT /api/workflows/:id', error: message });
     return NextResponse.json({ error: 'Failed to update workflow' }, { status: 500 });
   }
 }
@@ -109,16 +110,18 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid workflow ID' }, { status: 400 });
     }
 
-    // Cascade: delete associated runs first
-    await db.delete(runs).where(and(eq(runs.workflowId, id), eq(runs.userId, userId)));
-    await db.delete(workflows).where(and(eq(workflows.id, id), eq(workflows.userId, userId)));
+    // Cascade: delete associated runs first (atomic)
+    await db.transaction(async (tx) => {
+      await tx.delete(runs).where(and(eq(runs.workflowId, id), eq(runs.userId, userId)));
+      await tx.delete(workflows).where(and(eq(workflows.id, id), eq(workflows.userId, userId)));
+    });
     return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof Error && error.message === 'Unauthorized') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[DELETE /api/workflows/:id]', message);
+    logger.error('Failed to delete workflow', { route: 'DELETE /api/workflows/:id', error: message });
     return NextResponse.json({ error: 'Failed to delete workflow' }, { status: 500 });
   }
 }

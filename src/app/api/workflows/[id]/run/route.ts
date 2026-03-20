@@ -7,6 +7,7 @@ import { Graph } from '@/lib/engine/graph';
 import { decryptApiKey } from '@/lib/crypto';
 import { getAuthUserId } from '@/lib/api-auth';
 import { rateLimit } from '@/lib/rate-limit';
+import { logger } from '@/lib/logger';
 import type { WorkflowNode, WorkflowEdge } from '@/lib/engine/types';
 import type { IntegrationCredentials } from '@/types/integration';
 import { mkdirSync } from 'fs';
@@ -46,7 +47,7 @@ export async function POST(
 
     // Validate graph before execution
     if (!graphData.nodes || graphData.nodes.length === 0) {
-      console.error(`[run] Workflow ${id}: no nodes`);
+      logger.error('Workflow has no nodes', { workflowId: id });
       return NextResponse.json(
         { error: 'Workflow has no nodes. Add nodes before running.' },
         { status: 400 }
@@ -56,7 +57,7 @@ export async function POST(
     const graph = new Graph(graphData.nodes, graphData.edges || []);
     const validation = graph.validate();
     if (!validation.valid) {
-      console.error(`[run] Workflow ${id}: validation failed:`, validation.errors);
+      logger.error('Workflow validation failed', { workflowId: id, errors: validation.errors });
       return NextResponse.json(
         { error: 'Invalid workflow graph', details: validation.errors },
         { status: 400 }
@@ -73,8 +74,8 @@ export async function POST(
     for (const key of keys) {
       try {
         apiKeys[key.provider] = decryptApiKey(key.encryptedKey, key.iv, key.authTag, userId);
-      } catch {
-        // Skip invalid keys
+      } catch (error) {
+        logger.warn('Failed to decrypt API key', { provider: key.provider, userId, error: String(error) });
       }
     }
 
@@ -85,10 +86,10 @@ export async function POST(
         .map((n) => n.data.provider as string)
     );
 
-    console.log(`[run] Workflow ${id}: required providers:`, [...requiredProviders], 'configured keys:', Object.keys(apiKeys));
+    logger.info('Run starting', { workflowId: id, requiredProviders: [...requiredProviders], configuredKeys: Object.keys(apiKeys) });
     const missingKeys = [...requiredProviders].filter((p) => p !== 'claude-code' && p !== 'bedrock' && !apiKeys[p]);
     if (missingKeys.length > 0) {
-      console.error(`[run] Workflow ${id}: missing keys for:`, missingKeys);
+      logger.error('Missing API keys for providers', { workflowId: id, missingKeys });
       return NextResponse.json(
         { error: `Missing API keys for: ${missingKeys.join(', ')}. Configure them in Settings.` },
         { status: 400 }
@@ -117,7 +118,9 @@ export async function POST(
               accessToken,
               metadata: (conn.metadata as Record<string, unknown>) || undefined,
             };
-          } catch { /* skip invalid */ }
+          } catch (error) {
+            logger.warn('Failed to decrypt integration credential', { integrationId: conn.integrationId, userId, error: String(error) });
+          }
         }
       }
 
@@ -167,7 +170,9 @@ export async function POST(
               .update(runs)
               .set({ nodeStates: state.nodeStates, tokenUsage: state.totalTokens })
               .where(eq(runs.id, run.id));
-          } catch { /* best effort */ }
+          } catch (error) {
+            logger.warn('Failed to update run state', { runId: run.id, eventType: event.type, error: String(error) });
+          }
         }
       },
     });
@@ -190,7 +195,7 @@ export async function POST(
         .where(eq(runs.id, run.id));
     }).catch(async (error) => {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`[run ${run.id}] Execution failed:`, errorMessage);
+      logger.error('Execution failed', { runId: run.id, error: errorMessage });
       await db
         .update(runs)
         .set({

@@ -1,3 +1,6 @@
+# Cadre Helm Chart — Production Environment Overlay
+# High availability: 3+ replicas, HPA enabled, IRSA for Bedrock
+
 replicaCount: 3
 
 autoscaling:
@@ -9,6 +12,7 @@ autoscaling:
 config:
   CADRE_ENV: "prod"
   LOG_LEVEL: "warn"
+  # REQUIRED: Update to your production domain
   NEXTAUTH_URL: "https://cadre.example.com"
   WEBHOOK_BASE_URL: "https://cadre.example.com/api/webhooks"
 
@@ -22,4 +26,7 @@ ingress:
 serviceAccount:
   create: true
   annotations:
+    # REQUIRED for Bedrock: IRSA role ARN with bedrock:InvokeModel + bedrock:ListFoundationModels
+    # Create role: aws iam create-role --role-name cadre-bedrock-role ...
+    # Then associate with EKS: eksctl create iamserviceaccount ...
     eks.amazonaws.com/role-arn: "" # Set to Bedrock IRSA role ARN

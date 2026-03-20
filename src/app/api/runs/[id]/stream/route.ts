@@ -1,8 +1,9 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { runs } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { getAuthUserId } from '@/lib/api-auth';
+import { rateLimit } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +12,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const userId = await getAuthUserId();
+
+  const rl = rateLimit(`stream:${userId}`, 20);
+  if (!rl.success) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   const { id } = await params;
 
   const encoder = new TextEncoder();
