@@ -59,7 +59,7 @@
     "groq-sdk": "^0.37.0",
     "lucide-react": "^0.576.0",
     "motion": "^12.34.5",
-    "next": "16.1.6",
+    "next": "16.2.0",
     "next-auth": "5.0.0-beta.30",
     "openai": "^6.25.0",
     "postgres": "^3.4.8",
@@ -78,7 +78,7 @@
     "@vitest/coverage-v8": "^4.0.18",
     "drizzle-kit": "^0.31.9",
     "eslint": "^9",
-    "eslint-config-next": "16.1.6",
+    "eslint-config-next": "16.2.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.0.18"
@@ -86,7 +86,9 @@
   "packageManager": "pnpm@10.30.3+sha512.c961d1e0a2d8e354ecaa5166b822516668b7f44cb5bd95122d590dd81922f606f5473b6d23ec4a5be05e7fcd18e8488d47d978bbe981872f1145d06e9a740017",
   "pnpm": {
     "overrides": {
-      "esbuild": ">=0.25.0"
+      "esbuild": ">=0.25.0",
+      "flatted": ">=3.4.2",
+      "fast-xml-parser": ">=5.5.7"
     }
   }
 }
