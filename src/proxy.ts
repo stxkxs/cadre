@@ -6,9 +6,10 @@ export const proxy = auth((req) => {
   const isAuthRoute = req.nextUrl.pathname.startsWith('/api/auth');
   const isLoginPage = req.nextUrl.pathname === '/login';
   const isHealthCheck = req.nextUrl.pathname === '/api/health';
+  const isWebhookRoute = req.nextUrl.pathname.startsWith('/api/webhooks/');
 
-  // Allow auth routes, login page, and health check always
-  if (isAuthRoute || isLoginPage || isHealthCheck) {
+  // Allow auth routes, login page, health check, and webhooks always
+  if (isAuthRoute || isLoginPage || isHealthCheck || isWebhookRoute) {
     return NextResponse.next();
   }
 

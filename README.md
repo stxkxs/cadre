@@ -26,7 +26,8 @@ Cadre is a graph-based workflow builder for designing and running multi-step AI 
 ## Features
 
 - **Visual graph editor** — drag-and-drop nodes, snap-to-grid, minimap, undo/redo
-- **4 AI providers** — Anthropic (Claude), OpenAI (GPT-4o), Groq (Llama), Claude Code (CLI)
+- **5 AI providers** — Anthropic (Claude), OpenAI (GPT-4o), Groq (Llama), Claude Code (CLI), AWS Bedrock (dynamic model discovery)
+- **10 integrations** — GitHub, Linear, Notion, Slack, Figma, Jira, Confluence, Google Docs, Loom, Coda — with OAuth, webhook triggers, and bidirectional actions
 - **Parallel execution** — branches run concurrently with automatic merge
 - **Conditional routing** — evaluate expressions to route between branches
 - **Live monitoring** — SSE streaming of node outputs during execution
@@ -70,6 +71,11 @@ Edit `.env.local` with your values (generate secrets with `task gen:secret`):
 | `ENCRYPTION_SECRET` | API key encryption secret | Yes |
 | `NEXTAUTH_URL` | App URL (default: `http://localhost:3000`) | No |
 | `DB_POOL_SIZE` | Database connection pool size (default: `10`) | No |
+| `CADRE_ENV` | Environment: `local`, `dev`, `staging`, `prod` (default: `local`) | No |
+| `AWS_REGION` | AWS region for Bedrock (default: `us-east-1`) | No |
+| `REDIS_URL` | Redis connection string | No |
+| `WEBHOOK_BASE_URL` | Public URL for webhook callbacks | No |
+| `WEBHOOK_SECRET` | HMAC secret for verifying incoming webhooks | No |
 
 See [`.env.example`](.env.example) for all available variables.
 
@@ -90,7 +96,7 @@ Open [http://localhost:3000](http://localhost:3000) and sign in with GitHub.
 
 ### 5. Add your API keys
 
-Go to **Settings** (gear icon in sidebar) and add API keys for the providers you want to use: Anthropic, OpenAI, and/or Groq. Keys are encrypted at rest with AES-256-GCM.
+Go to **Settings** (gear icon in sidebar) and add API keys for the providers you want to use: Anthropic, OpenAI, and/or Groq. Keys are encrypted at rest with AES-256-GCM. Bedrock uses AWS credential chain (no API key needed). Connect external services on the **Integrations** page.
 
 ### 6. Your first workflow
 
@@ -110,6 +116,7 @@ Go to **Settings** (gear icon in sidebar) and add API keys for the providers you
 | **Loop** | Repeats a downstream branch up to N iterations while a condition holds. | Max iterations (up to 10), condition expression |
 | **Parallel** | Runs all downstream branches concurrently. | Max concurrency |
 | **Output** | Collects the final result of the workflow. | Output format (plain text, JSON, markdown) |
+| **Integration** | Executes an action on an external service (GitHub, Slack, etc.). | Integration, action, parameters (supports `{{node_id_output}}` templates) |
 
 ## Workflow Variables
 
@@ -190,12 +197,15 @@ task docker:run      # run it locally on :3000
 ### Kubernetes (Helm)
 
 ```bash
-task helm:lint       # validate the chart
-task helm:template   # dry-run render
-task helm:install    # deploy to current k8s context
+task helm:lint              # validate the chart
+task helm:template          # dry-run render
+task deploy:template ENV=dev  # dry-run for specific env
+task deploy:dev             # deploy to dev
+task deploy:staging         # deploy to staging
+task deploy:prod            # deploy to production (prompts for confirmation)
 ```
 
-See [`helm/cadre/`](helm/cadre/) for configurable values.
+Environment overlays in `helm/cadre/values-{dev,staging,prod}.yaml` configure replicas, HPA, log levels, and domains. The service account supports IRSA for Bedrock access in EKS.
 
 ## Task Reference
 
@@ -238,6 +248,14 @@ Run `task --list` to see all available tasks. Highlights:
 | `task infra:destroy` | Stop containers and delete volumes (prompts) |
 | `task infra:logs` | Tail container logs |
 | `task infra:ps` | Container status |
+
+**Deployment**
+| Command | Description |
+|---------|-------------|
+| `task deploy:dev` | Deploy to dev environment |
+| `task deploy:staging` | Deploy to staging environment |
+| `task deploy:prod` | Deploy to production (prompts) |
+| `task deploy:template` | Dry-run Helm render for an env (`ENV=dev`) |
 
 **Utilities**
 | Command | Description |

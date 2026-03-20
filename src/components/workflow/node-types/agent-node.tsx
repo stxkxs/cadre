@@ -11,6 +11,7 @@ const providerStyles: Record<ModelProvider, { barColor: string; iconBg: string; 
   openai: { barColor: 'bg-green-500', iconBg: 'bg-green-500/20', iconText: 'text-green-400', glowClass: 'node-glow-green' },
   groq: { barColor: 'bg-purple-500', iconBg: 'bg-purple-500/20', iconText: 'text-purple-400', glowClass: 'node-glow-purple' },
   'claude-code': { barColor: 'bg-blue-500', iconBg: 'bg-blue-500/20', iconText: 'text-blue-400', glowClass: 'node-glow-blue' },
+  bedrock: { barColor: 'bg-amber-500', iconBg: 'bg-amber-500/20', iconText: 'text-amber-400', glowClass: 'node-glow-amber' },
 };
 
 interface AgentNodeData {

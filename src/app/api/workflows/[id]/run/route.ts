@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { workflows, runs, userApiKeys } from '@/lib/db/schema';
+import { workflows, runs, userApiKeys, integrationConnections } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { Executor } from '@/lib/engine/executor';
 import { Graph } from '@/lib/engine/graph';
@@ -8,6 +8,7 @@ import { decryptApiKey } from '@/lib/crypto';
 import { getAuthUserId } from '@/lib/api-auth';
 import { rateLimit } from '@/lib/rate-limit';
 import type { WorkflowNode, WorkflowEdge } from '@/lib/engine/types';
+import type { IntegrationCredentials } from '@/types/integration';
 import { mkdirSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
@@ -85,13 +86,48 @@ export async function POST(
     );
 
     console.log(`[run] Workflow ${id}: required providers:`, [...requiredProviders], 'configured keys:', Object.keys(apiKeys));
-    const missingKeys = [...requiredProviders].filter((p) => p !== 'claude-code' && !apiKeys[p]);
+    const missingKeys = [...requiredProviders].filter((p) => p !== 'claude-code' && p !== 'bedrock' && !apiKeys[p]);
     if (missingKeys.length > 0) {
       console.error(`[run] Workflow ${id}: missing keys for:`, missingKeys);
       return NextResponse.json(
         { error: `Missing API keys for: ${missingKeys.join(', ')}. Configure them in Settings.` },
         { status: 400 }
       );
+    }
+
+    // Fetch integration credentials for integration nodes
+    const integrationCredentialsMap: Record<string, IntegrationCredentials> = {};
+    const requiredIntegrations = new Set(
+      graphData.nodes
+        .filter((n) => n.type === 'integration' && n.data?.integrationId)
+        .map((n) => n.data.integrationId as string)
+    );
+
+    if (requiredIntegrations.size > 0) {
+      const connections = await db
+        .select()
+        .from(integrationConnections)
+        .where(and(eq(integrationConnections.userId, userId), eq(integrationConnections.isActive, true)));
+
+      for (const conn of connections) {
+        if (requiredIntegrations.has(conn.integrationId)) {
+          try {
+            const accessToken = decryptApiKey(conn.encryptedAccessToken, conn.iv, conn.authTag, userId);
+            integrationCredentialsMap[conn.integrationId] = {
+              accessToken,
+              metadata: (conn.metadata as Record<string, unknown>) || undefined,
+            };
+          } catch { /* skip invalid */ }
+        }
+      }
+
+      const missingIntegrations = [...requiredIntegrations].filter(i => !integrationCredentialsMap[i]);
+      if (missingIntegrations.length > 0) {
+        return NextResponse.json(
+          { error: `Missing integration connections for: ${missingIntegrations.join(', ')}. Connect them in Settings → Integrations.` },
+          { status: 400 }
+        );
+      }
     }
 
     // Check if any agent nodes have workspace enabled
@@ -121,6 +157,7 @@ export async function POST(
       apiKeys,
       variables: (workflow.variables as Record<string, string>) || {},
       workspacePath,
+      integrationCredentials: integrationCredentialsMap,
       onEvent: async (event) => {
         // Write intermediate state to DB so SSE stream picks it up
         if (event.type === 'node-start' || event.type === 'node-complete' || event.type === 'node-error') {

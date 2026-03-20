@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,16 +11,44 @@ import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
 import { useWorkflowStore } from '@/lib/store/workflow-store';
 import { PROVIDER_CONFIGS } from '@/types/provider';
+import { INTEGRATION_CONFIGS } from '@/types/integration-configs';
 import type { ModelProvider } from '@/lib/engine/types';
 
 export function ConfigPanel() {
   const { selectedNodeId, nodes, edges, updateNode, selectNode, removeNode } = useWorkflowStore();
+  const [bedrockModels, setBedrockModels] = useState<{ id: string; name: string }[]>([]);
+  const [integrationActions, setIntegrationActions] = useState<{ id: string; name: string; direction: string }[]>([]);
 
   const node = nodes.find((n) => n.id === selectedNodeId);
+
+  useEffect(() => {
+    if (node?.type === 'integration' && node?.data.integrationId) {
+      fetch(`/api/integrations/${node.data.integrationId}/actions`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.actions) setIntegrationActions(data.actions);
+        })
+        .catch(() => {});
+    }
+  }, [node?.type, node?.data.integrationId]);
+
+  useEffect(() => {
+    if (node?.data.provider === 'bedrock' && bedrockModels.length === 0) {
+      fetch('/api/models/bedrock')
+        .then(r => r.json())
+        .then(data => {
+          if (data.models) setBedrockModels(data.models);
+        })
+        .catch(() => {});
+    }
+  }, [node?.data.provider, bedrockModels.length]);
+
   if (!node) return null;
 
   const selectedProvider = PROVIDER_CONFIGS.find((p) => p.id === node.data.provider);
-  const models = selectedProvider?.models || [];
+  const models = node.data.provider === 'bedrock'
+    ? bedrockModels.map(m => ({ id: m.id, name: m.name, maxTokens: 4096, supportsStreaming: true, supportsTools: true, inputCostPer1k: 0.003, outputCostPer1k: 0.015 }))
+    : selectedProvider?.models || [];
   const incomingEdges = edges.filter((e) => e.target === node.id).length;
   const outgoingEdges = edges.filter((e) => e.source === node.id).length;
 
@@ -353,6 +381,71 @@ export function ConfigPanel() {
                 JavaScript expression evaluated against the run context.
               </p>
             </div>
+          </>
+        )}
+
+        {/* Integration-specific config */}
+        {node.type === 'integration' && (
+          <>
+            <Separator />
+            <div className="space-y-2">
+              <Label>Integration</Label>
+              <Select
+                value={node.data.integrationId || ''}
+                onValueChange={(value) => updateNode(node.id, { integrationId: value, integrationAction: '' } as Record<string, unknown>)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select integration" />
+                </SelectTrigger>
+                <SelectContent>
+                  {INTEGRATION_CONFIGS.map((i) => (
+                    <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {node.data.integrationId && (
+              <div className="space-y-2">
+                <Label>Action</Label>
+                <Select
+                  value={node.data.integrationAction || ''}
+                  onValueChange={(value) => updateNode(node.id, { integrationAction: value } as Record<string, unknown>)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select action" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {integrationActions.map((a) => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.name} ({a.direction})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {node.data.integrationAction && (
+              <div className="space-y-2">
+                <Label>Parameters (JSON)</Label>
+                <Textarea
+                  value={JSON.stringify(node.data.integrationParams || {}, null, 2)}
+                  onChange={(e) => {
+                    try {
+                      const params = JSON.parse(e.target.value);
+                      updateNode(node.id, { integrationParams: params } as Record<string, unknown>);
+                    } catch { /* ignore invalid JSON while typing */ }
+                  }}
+                  placeholder='{"repo": "owner/name", "title": "{{node_xyz_output}}"}'
+                  rows={4}
+                  className="font-mono text-xs"
+                />
+                <p className="text-xs text-dim">
+                  Use {'{{node_id_output}}'} to reference predecessor outputs.
+                </p>
+              </div>
+            )}
           </>
         )}
 

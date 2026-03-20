@@ -146,6 +146,12 @@ tasks:
     cmds:
       - docker run --rm -p 3000:3000 --env-file .env.local --network host cadre:latest
 
+  # ── Infrastructure (full) ──────────────────────────────────
+  infra:full:
+    desc: Start all local infra including optional services
+    cmds:
+      - "{{.DOCKER_COMPOSE}} up -d"
+
   # ── Helm / k8s ─────────────────────────────────────────────
   helm:template:
     desc: Render Helm templates locally (dry-run)
@@ -161,6 +167,29 @@ tasks:
     desc: Install/upgrade Cadre on the current k8s cluster
     cmds:
       - helm upgrade --install cadre ./helm/cadre -f ./helm/cadre/values.yaml
+
+  deploy:template:
+    desc: Dry-run Helm render for a specific environment
+    cmds:
+      - helm template cadre ./helm/cadre -f ./helm/cadre/values.yaml -f ./helm/cadre/values-{{.ENV}}.yaml
+    vars:
+      ENV: '{{default "dev" .ENV}}'
+
+  deploy:dev:
+    desc: Deploy to dev environment
+    cmds:
+      - helm upgrade --install cadre ./helm/cadre -f ./helm/cadre/values.yaml -f ./helm/cadre/values-dev.yaml
+
+  deploy:staging:
+    desc: Deploy to staging environment
+    cmds:
+      - helm upgrade --install cadre ./helm/cadre -f ./helm/cadre/values.yaml -f ./helm/cadre/values-staging.yaml
+
+  deploy:prod:
+    desc: Deploy to production environment
+    prompt: "Deploy to PRODUCTION? This is irreversible."
+    cmds:
+      - helm upgrade --install cadre ./helm/cadre -f ./helm/cadre/values.yaml -f ./helm/cadre/values-prod.yaml
 
   # ── Secrets / Helpers ──────────────────────────────────────
   gen:secret:

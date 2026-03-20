@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, jsonb, boolean, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, jsonb, boolean, uuid, index } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -12,7 +12,7 @@ export const users = pgTable('users', {
 export const userApiKeys = pgTable('user_api_keys', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  provider: text('provider').notNull(), // 'anthropic' | 'openai' | 'groq' | 'claude-code'
+  provider: text('provider').notNull(), // 'anthropic' | 'openai' | 'groq' | 'claude-code' | 'bedrock'
   encryptedKey: text('encrypted_key').notNull(),
   iv: text('iv').notNull(),
   authTag: text('auth_tag').notNull(),
@@ -42,6 +42,54 @@ export const runs = pgTable('runs', {
   startedAt: timestamp('started_at').defaultNow().notNull(),
   completedAt: timestamp('completed_at'),
 });
+
+export const integrationConnections = pgTable('integration_connections', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  integrationId: text('integration_id').notNull(),
+  encryptedAccessToken: text('encrypted_access_token').notNull(),
+  encryptedRefreshToken: text('encrypted_refresh_token'),
+  iv: text('iv').notNull(),
+  authTag: text('auth_tag').notNull(),
+  tokenExpiresAt: timestamp('token_expires_at'),
+  metadata: jsonb('metadata').default({}),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => [
+  index('idx_integration_connections_user').on(table.userId),
+  index('idx_integration_connections_user_integration').on(table.userId, table.integrationId),
+]);
+
+export const webhookEvents = pgTable('webhook_events', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  integrationId: text('integration_id').notNull(),
+  eventType: text('event_type').notNull(),
+  payload: jsonb('payload').notNull(),
+  sourceId: text('source_id'),
+  status: text('status').notNull().default('received'),
+  processedAt: timestamp('processed_at'),
+  error: text('error'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+  index('idx_webhook_events_integration').on(table.integrationId),
+  index('idx_webhook_events_status').on(table.status),
+]);
+
+export const webhookTriggers = pgTable('webhook_triggers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  workflowId: uuid('workflow_id').notNull().references(() => workflows.id, { onDelete: 'cascade' }),
+  integrationId: text('integration_id').notNull(),
+  eventType: text('event_type').notNull(),
+  filter: jsonb('filter').default({}),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+  index('idx_webhook_triggers_user').on(table.userId),
+  index('idx_webhook_triggers_workflow').on(table.workflowId),
+  index('idx_webhook_triggers_integration_event').on(table.integrationId, table.eventType),
+]);
 
 export const agentTemplates = pgTable('agent_templates', {
   id: uuid('id').primaryKey().defaultRandom(),

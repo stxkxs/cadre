@@ -4,6 +4,7 @@ import { RunContext } from './context';
 import { providerRegistry } from '../providers/registry';
 import type { WorkflowNode, RunState, ExecutionEvent } from './types';
 import type { ProviderMessage } from '../providers/base';
+import type { IntegrationCredentials } from '@/types/integration';
 import { readdirSync, statSync, writeFileSync } from 'fs';
 import { join, relative } from 'path';
 
@@ -11,6 +12,7 @@ export interface ExecutorOptions {
   apiKeys: Record<string, string>;
   variables?: Record<string, string>;
   workspacePath?: string;
+  integrationCredentials?: Record<string, IntegrationCredentials>;
   onEvent?: (event: ExecutionEvent) => void;
 }
 
@@ -19,6 +21,7 @@ export class Executor {
   private scheduler: Scheduler;
   private context: RunContext;
   private apiKeys: Record<string, string>;
+  private integrationCredentials: Record<string, IntegrationCredentials>;
   private workspacePath?: string;
   private aborted = false;
 
@@ -31,6 +34,7 @@ export class Executor {
     this.scheduler = new Scheduler(this.graph);
     this.context = new RunContext(options.variables || {});
     this.apiKeys = options.apiKeys;
+    this.integrationCredentials = options.integrationCredentials || {};
     this.workspacePath = options.workspacePath;
 
     if (options.onEvent) {
@@ -211,6 +215,9 @@ export class Executor {
       case 'loop':
         await this.executeLoopNode(node);
         break;
+      case 'integration':
+        await this.executeIntegrationNode(node, signal);
+        break;
     }
   }
 
@@ -221,6 +228,7 @@ export class Executor {
       openai: { input: 2.5, output: 10.0 },       // GPT-4o per million tokens
       groq: { input: 0.59, output: 0.79 },        // Llama-3.3-70b via Groq
       'claude-code': { input: 3.0, output: 15.0 }, // Same as Anthropic
+      bedrock: { input: 3.0, output: 15.0 },       // Claude Sonnet on Bedrock (default)
     };
 
     // Find the primary provider from nodes
@@ -236,7 +244,7 @@ export class Executor {
     if (!provider) throw new Error('Agent node must have a provider');
 
     const apiKey = this.apiKeys[provider] || '';
-    if (!apiKey && provider !== 'claude-code') throw new Error(`No API key configured for ${provider}`);
+    if (!apiKey && provider !== 'claude-code' && provider !== 'bedrock') throw new Error(`No API key configured for ${provider}`);
 
     const providerInstance = providerRegistry.get(provider);
     const workspaceMode = node.data.workspace || 'off';
@@ -352,6 +360,52 @@ export class Executor {
         const stat = statSync(fullPath);
         files.set(relativePath, stat.size);
       }
+    }
+  }
+
+  private async executeIntegrationNode(node: WorkflowNode, _signal?: AbortSignal): Promise<void> {
+    const { integrationId, integrationAction, integrationParams } = node.data;
+    if (!integrationId) throw new Error('Integration node must have an integrationId');
+    if (!integrationAction) throw new Error('Integration node must have an integrationAction');
+
+    const { integrationRegistry } = await import('@/lib/integrations/registry');
+    const integration = integrationRegistry.get(integrationId as import('@/types/integration').IntegrationId);
+
+    const credentials = this.integrationCredentials[integrationId];
+    if (!credentials) throw new Error(`No credentials configured for ${integration.name}. Connect it in Settings → Integrations.`);
+
+    // Build action params: merge static params with dynamic data from predecessors
+    const predecessors = this.graph.getPredecessors(node.id);
+    const predecessorOutputs: Record<string, string> = {};
+    for (const p of predecessors) {
+      const output = this.context.getNodeOutput(p);
+      if (output) {
+        predecessorOutputs[`node_${p}_output`] = output;
+      }
+    }
+
+    // Template interpolation: replace {{node_xyz_output}} in params
+    const resolvedParams: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(integrationParams || {})) {
+      if (typeof value === 'string') {
+        resolvedParams[key] = value.replace(/\{\{(\w+)\}\}/g, (_, varName) => {
+          return predecessorOutputs[varName] || (this.context.get(varName) as string) || '';
+        });
+      } else {
+        resolvedParams[key] = value;
+      }
+    }
+
+    const result = await integration.safeExecute(
+      { actionId: integrationAction, params: resolvedParams },
+      credentials
+    );
+
+    const output = JSON.stringify(result.data, null, 2);
+    this.context.setNodeOutput(node.id, output);
+
+    if (!result.success) {
+      throw new Error(result.error || `Integration action ${integrationAction} failed`);
     }
   }
 

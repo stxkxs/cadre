@@ -6,6 +6,8 @@ export interface ProviderConfig {
   models: ModelConfig[];
   color: string;
   icon: string;
+  dynamicModels?: boolean;
+  noApiKey?: boolean;
 }
 
 export interface ModelConfig {
@@ -62,8 +64,18 @@ export const PROVIDER_CONFIGS: ProviderConfig[] = [
     name: 'Claude Code (Terminal)',
     color: '#3b82f6',
     icon: 'terminal',
+    noApiKey: true,
     models: [
       { id: 'claude-code', name: 'Claude Code', maxTokens: 8192, supportsStreaming: true, supportsTools: true, inputCostPer1k: 0.003, outputCostPer1k: 0.015 },
     ],
+  },
+  {
+    id: 'bedrock',
+    name: 'AWS Bedrock',
+    color: '#f59e0b',
+    icon: 'cloud',
+    dynamicModels: true,
+    noApiKey: true,
+    models: [],
   },
 ];

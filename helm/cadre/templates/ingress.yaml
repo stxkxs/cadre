@@ -2,10 +2,9 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ .Release.Name }}-cadre
+  name: {{ include "cadre.fullname" . }}
   labels:
-    app: cadre
-    release: {{ .Release.Name }}
+    {{- include "cadre.labels" . | nindent 4 }}
   {{- with .Values.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -22,7 +21,7 @@ spec:
             pathType: {{ .pathType }}
             backend:
               service:
-                name: {{ $.Release.Name }}-cadre
+                name: {{ include "cadre.fullname" $ }}
                 port:
                   number: {{ $.Values.service.port }}
           {{- end }}

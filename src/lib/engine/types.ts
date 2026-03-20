@@ -1,4 +1,4 @@
-export type ModelProvider = 'anthropic' | 'openai' | 'groq' | 'claude-code';
+export type ModelProvider = 'anthropic' | 'openai' | 'groq' | 'claude-code' | 'bedrock';
 
 export interface ToolDefinition {
   name: string;
@@ -8,7 +8,7 @@ export interface ToolDefinition {
 
 export interface WorkflowNode {
   id: string;
-  type: 'agent' | 'condition' | 'input' | 'output' | 'parallel' | 'loop';
+  type: 'agent' | 'condition' | 'input' | 'output' | 'parallel' | 'loop' | 'integration';
   position: { x: number; y: number };
   data: {
     label: string;
@@ -23,6 +23,9 @@ export interface WorkflowNode {
     timeout?: number;
     maxTurns?: number;
     workspace?: 'off' | 'safe' | 'full';
+    integrationId?: string;
+    integrationAction?: string;
+    integrationParams?: Record<string, unknown>;
   };
 }
 

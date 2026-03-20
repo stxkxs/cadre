@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Brain, GitBranch, ArrowDownToLine, ArrowUpFromLine, Layers, RotateCcw, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Brain, GitBranch, ArrowDownToLine, ArrowUpFromLine, Layers, RotateCcw, Plug, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useWorkflowStore } from '@/lib/store/workflow-store';
 
@@ -12,6 +12,7 @@ const paletteItems = [
   { type: 'output', label: 'Output', icon: ArrowUpFromLine, description: 'Workflow output', accentColor: 'border-l-[#0AEFB7]', textColor: 'text-[#0AEFB7]', borderColor: 'border-[#0AEFB7]/20' },
   { type: 'parallel', label: 'Parallel', icon: Layers, description: 'Concurrent execution', accentColor: 'border-l-indigo-500', textColor: 'text-indigo-400', borderColor: 'border-indigo-500/20' },
   { type: 'loop', label: 'Loop', icon: RotateCcw, description: 'Repeat until condition', accentColor: 'border-l-pink-500', textColor: 'text-pink-400', borderColor: 'border-pink-500/20' },
+  { type: 'integration', label: 'Integration', icon: Plug, description: 'External service action', accentColor: 'border-l-violet-500', textColor: 'text-violet-400', borderColor: 'border-violet-500/20' },
 ];
 
 export function NodePalette() {

@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   GitBranch,
   Library,
+  Plug,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -20,6 +21,7 @@ const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/workflows', label: 'Workflows', icon: GitBranch },
   { href: '/library', label: 'Library', icon: Library },
+  { href: '/integrations', label: 'Integrations', icon: Plug },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
