@@ -12,15 +12,19 @@ interface FileEntry {
   isDirectory: boolean;
 }
 
-function walkDir(baseDir: string, currentDir: string, entries: FileEntry[]): void {
+function walkDir(baseDir: string, currentDir: string, entries: FileEntry[], maxDepth = 10): void {
+  if (maxDepth <= 0 || entries.length >= 10_000) return;
+
   const items = readdirSync(currentDir, { withFileTypes: true });
   for (const item of items) {
+    if (entries.length >= 10_000) return;
+
     const fullPath = join(currentDir, item.name);
     const relativePath = relative(baseDir, fullPath);
     if (item.isDirectory()) {
       if (item.name.startsWith('.') || item.name === 'node_modules') continue;
       entries.push({ path: relativePath, size: 0, isDirectory: true });
-      walkDir(baseDir, fullPath, entries);
+      walkDir(baseDir, fullPath, entries, maxDepth - 1);
     } else if (item.isFile()) {
       const stat = statSync(fullPath);
       entries.push({ path: relativePath, size: stat.size, isDirectory: false });

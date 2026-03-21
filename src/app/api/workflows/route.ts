@@ -3,10 +3,17 @@ import { db } from '@/lib/db';
 import { workflows } from '@/lib/db/schema';
 import { getAuthUserId } from '@/lib/api-auth';
 import { eq, desc } from 'drizzle-orm';
+import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function GET(request: NextRequest) {
   try {
     const userId = await getAuthUserId();
+
+    const rl = rateLimit(`list-workflows:${userId}`, 60);
+    if (!rl.success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
     const limit = Math.min(parseInt(request.nextUrl.searchParams.get('limit') || '50') || 50, 100);
     const offset = Math.max(parseInt(request.nextUrl.searchParams.get('offset') || '0') || 0, 0);
 
@@ -23,7 +30,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[GET /api/workflows]', message);
+    logger.error('Failed to fetch workflows', { route: 'GET /api/workflows', error: message });
     return NextResponse.json(
       { error: 'Failed to fetch workflows', detail: message },
       { status: 500 }
@@ -70,7 +77,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[POST /api/workflows]', message);
+    logger.error('Failed to create workflow', { route: 'POST /api/workflows', error: message });
     return NextResponse.json(
       { error: 'Failed to create workflow', detail: message },
       { status: 500 }

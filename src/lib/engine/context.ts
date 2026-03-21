@@ -1,4 +1,5 @@
 import type { NodeRunState, ExecutionEvent } from './types';
+import { logger } from '@/lib/logger';
 
 export class RunContext {
   private data: Record<string, unknown> = {};
@@ -68,13 +69,13 @@ export class RunContext {
       // Block dangerous patterns — prevent access to process, require, import, global objects
       const forbidden = /\b(process|require|import|eval|Function|globalThis|global|window|document|fetch|XMLHttpRequest|__dirname|__filename)\b/;
       if (forbidden.test(expression)) {
-        console.warn(`[condition] Blocked dangerous expression: ${expression}`);
+        logger.warn('Blocked dangerous condition expression', { expression });
         return false;
       }
 
       // Limit expression length to prevent abuse
       if (expression.length > 1000) {
-        console.warn('[condition] Expression too long, rejected');
+        logger.warn('Condition expression too long, rejected', { length: expression.length });
         return false;
       }
 
@@ -93,7 +94,7 @@ export class RunContext {
       );
       return fn(sandboxedContext);
     } catch (error) {
-      console.warn(`[condition] Failed to evaluate: ${expression}`, error);
+      logger.warn('Failed to evaluate condition', { expression, error: String(error) });
       return false;
     }
   }

@@ -1,4 +1,5 @@
 import type { IntegrationId } from '@/types/integration';
+import { logger } from '@/lib/logger';
 
 const envKeyMap: Record<IntegrationId, string> = {
   github: 'WEBHOOK_SECRET_GITHUB',
@@ -15,5 +16,15 @@ const envKeyMap: Record<IntegrationId, string> = {
 
 export function getWebhookSecret(integrationId: IntegrationId): string {
   const envKey = envKeyMap[integrationId];
-  return process.env[envKey] || process.env.WEBHOOK_SECRET || '';
+  const secret = process.env[envKey] || process.env.WEBHOOK_SECRET || '';
+
+  if (!secret) {
+    const env = process.env.CADRE_ENV || 'local';
+    if (env === 'prod' || env === 'staging') {
+      throw new Error(`Webhook secret not configured for ${integrationId} in ${env}. Set ${envKey} or WEBHOOK_SECRET.`);
+    }
+    logger.warn('Webhook secret not configured, skipping verification', { integrationId, env });
+  }
+
+  return secret;
 }

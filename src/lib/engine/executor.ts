@@ -347,14 +347,18 @@ export class Executor {
     return files;
   }
 
-  private walkDir(baseDir: string, currentDir: string, files: Map<string, number>): void {
+  private walkDir(baseDir: string, currentDir: string, files: Map<string, number>, maxDepth = 10): void {
+    if (maxDepth <= 0 || files.size >= 10_000) return;
+
     const entries = readdirSync(currentDir, { withFileTypes: true });
     for (const entry of entries) {
+      if (files.size >= 10_000) return;
+
       const fullPath = join(currentDir, entry.name);
       if (entry.isDirectory()) {
         // Skip hidden dirs and node_modules
         if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
-        this.walkDir(baseDir, fullPath, files);
+        this.walkDir(baseDir, fullPath, files, maxDepth - 1);
       } else if (entry.isFile()) {
         const relativePath = relative(baseDir, fullPath);
         const stat = statSync(fullPath);

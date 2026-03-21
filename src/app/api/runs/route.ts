@@ -3,10 +3,16 @@ import { db } from '@/lib/db';
 import { runs } from '@/lib/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { getAuthUserId } from '@/lib/api-auth';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function GET(request: NextRequest) {
   try {
     const userId = await getAuthUserId();
+
+    const rl = rateLimit(`list-runs:${userId}`, 60);
+    if (!rl.success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
     const workflowId = request.nextUrl.searchParams.get('workflowId');
 
     const limit = Math.min(parseInt(request.nextUrl.searchParams.get('limit') || '50') || 50, 100);

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUserId } from '@/lib/api-auth';
 import { integrationRegistry } from '@/lib/integrations/registry';
 import { storeCredentials } from '@/lib/integrations/credentials';
+import { logger } from '@/lib/logger';
 import type { IntegrationId } from '@/types/integration';
 
 export async function GET(
@@ -47,7 +48,7 @@ export async function GET(
     response.cookies.delete(`oauth_state_${id}`);
     return response;
   } catch (error) {
-    console.error(`[integration callback] ${(await params).id}:`, error);
+    logger.error('Integration OAuth callback failed', { integrationId: (await params).id, error: String(error) });
     return NextResponse.redirect(new URL('/integrations?error=exchange_failed', request.url));
   }
 }

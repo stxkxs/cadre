@@ -1,3 +1,6 @@
+# Cadre Helm Chart — Default Values
+# Override per-environment with values-{dev,staging,prod}.yaml
+
 replicaCount: 2
 
 image:
@@ -17,6 +20,8 @@ ingress:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    # REQUIRED in prod/staging: ARN of the ACM certificate for HTTPS
+    # Generate: aws acm request-certificate --domain-name cadre.example.com
     alb.ingress.kubernetes.io/certificate-arn: ""
   hosts:
     - host: cadre.example.com
@@ -40,29 +45,53 @@ autoscaling:
 
 # Non-sensitive config (→ ConfigMap)
 config:
+  # REQUIRED: Environment name — controls logging level, error strictness, webhook secret enforcement
+  # Valid values: local, dev, staging, prod
   CADRE_ENV: "prod"
   NODE_ENV: "production"
+  # OPTIONAL: Log verbosity — debug | info | warn | error (default: warn in prod, debug otherwise)
   LOG_LEVEL: "warn"
+  # OPTIONAL: S3 bucket for artifact storage
   S3_BUCKET: "cadre-artifacts"
+  # OPTIONAL: AWS region for Bedrock and S3 (default: us-east-1)
   AWS_REGION: "us-east-1"
+  # REQUIRED: Public URL of the app — used for OAuth redirects and CORS
   NEXTAUTH_URL: "https://cadre.example.com"
+  # OPTIONAL: Database connection pool size (default: 10)
   DB_POOL_SIZE: "10"
   NEXT_TELEMETRY_DISABLED: "1"
+  # REQUIRED: Public URL for webhook endpoints — external services POST here
   WEBHOOK_BASE_URL: "https://cadre.example.com/api/webhooks"
 
 # Sensitive config (→ Secret)
+# All values below MUST be set before deploying. Empty strings will cause runtime failures.
 secrets:
+  # REQUIRED: PostgreSQL connection string
+  # Format: postgresql://user:password@host:5432/cadre?sslmode=require
   DATABASE_URL: ""
+  # OPTIONAL: Redis URL for future session/cache support
   REDIS_URL: ""
+  # REQUIRED: NextAuth session signing secret
+  # Generate: openssl rand -base64 32
   AUTH_SECRET: ""
+  # REQUIRED: GitHub OAuth App client ID
+  # Create at: https://github.com/settings/applications/new
   AUTH_GITHUB_ID: ""
+  # REQUIRED: GitHub OAuth App client secret
   AUTH_GITHUB_SECRET: ""
+  # REQUIRED: AES-256-GCM encryption key for API keys and integration tokens
+  # Generate: openssl rand -hex 32
   ENCRYPTION_SECRET: ""
+  # RECOMMENDED: Global webhook signature verification secret
+  # Generate: openssl rand -hex 32
+  # Per-provider overrides: set WEBHOOK_SECRET_GITHUB, WEBHOOK_SECRET_LINEAR, etc.
   WEBHOOK_SECRET: ""
 
 serviceAccount:
   create: true
   annotations: {}
+  # REQUIRED for Bedrock: IRSA role ARN with bedrock:InvokeModel permission
+  # Format: arn:aws:iam::ACCOUNT_ID:role/cadre-bedrock-role
   # eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT:role/cadre-bedrock-role
 
 nodeSelector: {}

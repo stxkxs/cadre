@@ -5,6 +5,7 @@ import * as schema from './schema';
 function createDb() {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
+    // Use console.warn here since logger may not be initialized during module load
     console.warn('[cadre] DATABASE_URL not set — database operations will fail');
     // Return a proxy that throws helpful errors
     return null;

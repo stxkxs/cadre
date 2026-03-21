@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { runs } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { getAuthUserId } from '@/lib/api-auth';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function GET(
   request: NextRequest,
@@ -82,6 +83,12 @@ export async function DELETE(
 ) {
   try {
     const userId = await getAuthUserId();
+
+    const rl = rateLimit(`delete-run:${userId}`, 30);
+    if (!rl.success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+
     const { id } = await params;
 
     const [run] = await db

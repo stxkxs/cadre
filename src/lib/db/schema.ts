@@ -18,7 +18,9 @@ export const userApiKeys = pgTable('user_api_keys', {
   authTag: text('auth_tag').notNull(),
   isValid: boolean('is_valid').default(false),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => [
+  index('idx_user_api_keys_user').on(table.userId),
+]);
 
 export const workflows = pgTable('workflows', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -29,7 +31,10 @@ export const workflows = pgTable('workflows', {
   variables: jsonb('variables').default({}),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => [
+  index('idx_workflows_user').on(table.userId),
+  index('idx_workflows_updated_at').on(table.updatedAt),
+]);
 
 export const runs = pgTable('runs', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -41,7 +46,13 @@ export const runs = pgTable('runs', {
   tokenUsage: jsonb('token_usage').default({ input: 0, output: 0, cost: 0 }),
   startedAt: timestamp('started_at').defaultNow().notNull(),
   completedAt: timestamp('completed_at'),
-});
+}, (table) => [
+  index('idx_runs_user').on(table.userId),
+  index('idx_runs_workflow').on(table.workflowId),
+  index('idx_runs_status').on(table.status),
+  index('idx_runs_started_at').on(table.startedAt),
+  index('idx_runs_user_workflow').on(table.userId, table.workflowId),
+]);
 
 export const integrationConnections = pgTable('integration_connections', {
   id: uuid('id').primaryKey().defaultRandom(),

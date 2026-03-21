@@ -5,6 +5,9 @@ import { decryptApiKey, encryptApiKey } from '@/lib/crypto';
 import { integrationRegistry } from './registry';
 import type { IntegrationId, IntegrationCredentials } from '@/types/integration';
 
+// Prevents concurrent token refreshes for the same integration+user
+const refreshLocks = new Map<string, Promise<IntegrationCredentials>>();
+
 export async function getValidCredentials(
   userId: string,
   integrationId: IntegrationId
@@ -50,11 +53,33 @@ export async function getValidCredentials(
   if (credentials.tokenExpiresAt && credentials.refreshToken) {
     const fiveMinutes = 5 * 60 * 1000;
     if (credentials.tokenExpiresAt.getTime() - Date.now() < fiveMinutes) {
+      const lockKey = `${integrationId}:${userId}`;
+      const existing = refreshLocks.get(lockKey);
+      if (existing) {
+        // Another caller is already refreshing — await same promise
+        try {
+          return await existing;
+        } catch {
+          // If the other refresh failed, return existing credentials
+          return credentials;
+        }
+      }
+
+      const refreshPromise = (async () => {
+        try {
+          const integration = integrationRegistry.get(integrationId);
+          const refreshed = await integration.refreshToken(credentials);
+          await storeCredentials(userId, integrationId, refreshed);
+          return refreshed;
+        } finally {
+          refreshLocks.delete(lockKey);
+        }
+      })();
+
+      refreshLocks.set(lockKey, refreshPromise);
+
       try {
-        const integration = integrationRegistry.get(integrationId);
-        const refreshed = await integration.refreshToken(credentials);
-        await storeCredentials(userId, integrationId, refreshed);
-        return refreshed;
+        return await refreshPromise;
       } catch {
         // Return existing credentials if refresh fails
       }
@@ -80,26 +105,28 @@ export async function storeCredentials(
     encryptedRefreshToken = result.encryptedKey;
   }
 
-  // Upsert: delete existing then insert
-  await db
-    .delete(integrationConnections)
-    .where(
-      and(
-        eq(integrationConnections.userId, userId),
-        eq(integrationConnections.integrationId, integrationId)
-      )
-    );
+  // Upsert: delete existing then insert (atomic)
+  await db.transaction(async (tx) => {
+    await tx
+      .delete(integrationConnections)
+      .where(
+        and(
+          eq(integrationConnections.userId, userId),
+          eq(integrationConnections.integrationId, integrationId)
+        )
+      );
 
-  await db.insert(integrationConnections).values({
-    userId,
-    integrationId,
-    encryptedAccessToken,
-    encryptedRefreshToken,
-    iv,
-    authTag,
-    tokenExpiresAt: credentials.tokenExpiresAt || null,
-    metadata: credentials.metadata || {},
-    isActive: true,
+    await tx.insert(integrationConnections).values({
+      userId,
+      integrationId,
+      encryptedAccessToken,
+      encryptedRefreshToken,
+      iv,
+      authTag,
+      tokenExpiresAt: credentials.tokenExpiresAt || null,
+      metadata: credentials.metadata || {},
+      isActive: true,
+    });
   });
 }
 

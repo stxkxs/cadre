@@ -4,7 +4,10 @@ const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16;
 
 function deriveKey(userId: string): Buffer {
-  const serverSecret = process.env.ENCRYPTION_SECRET || 'dev-secret-change-in-production';
+  const serverSecret = process.env.ENCRYPTION_SECRET;
+  if (!serverSecret) {
+    throw new Error('ENCRYPTION_SECRET environment variable is required');
+  }
   return createHash('sha256')
     .update(`${serverSecret}:${userId}`)
     .digest();

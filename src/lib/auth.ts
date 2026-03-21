@@ -3,6 +3,7 @@ import GitHub from 'next-auth/providers/github';
 import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { logger } from '@/lib/logger';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -43,7 +44,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             .where(eq(users.email, user.email));
         }
       } catch (error) {
-        console.error('[auth] Failed to upsert user:', error);
+        logger.error('Failed to upsert user', { error: String(error) });
         return false;
       }
       return true;
@@ -68,7 +69,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token.dbId = dbUser.id;
           }
         } catch (error) {
-          console.error('[auth] Failed to look up user:', error);
+          logger.error('Failed to look up user', { error: String(error) });
         }
       }
       return token;

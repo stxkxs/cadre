@@ -44,6 +44,8 @@ function requiredVar(name: string, env: CadreEnv): string {
     if (env === 'prod' || env === 'staging') {
       throw new Error(`Missing required environment variable: ${name}`);
     }
+    // Dynamic import avoided — logger depends on env vars that config is still reading.
+    // Use console.warn here since logger.warn would create a circular dependency.
     console.warn(`[config] Missing env var ${name} (non-critical in ${env})`);
     return '';
   }

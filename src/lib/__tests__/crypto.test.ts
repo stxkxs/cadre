@@ -1,7 +1,21 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { encryptApiKey, decryptApiKey } from '../crypto';
 
 describe('crypto', () => {
+  const originalSecret = process.env.ENCRYPTION_SECRET;
+
+  beforeAll(() => {
+    process.env.ENCRYPTION_SECRET = 'test-secret-for-unit-tests';
+  });
+
+  afterAll(() => {
+    if (originalSecret !== undefined) {
+      process.env.ENCRYPTION_SECRET = originalSecret;
+    } else {
+      delete process.env.ENCRYPTION_SECRET;
+    }
+  });
+
   it('round-trips encrypt and decrypt', () => {
     const apiKey = 'sk-test-1234567890abcdef';
     const userId = 'user-1';
@@ -48,5 +62,15 @@ describe('crypto', () => {
     const { encryptedKey, iv, authTag } = encryptApiKey(longKey, 'user-1');
     const decrypted = decryptApiKey(encryptedKey, iv, authTag, 'user-1');
     expect(decrypted).toBe(longKey);
+  });
+
+  it('throws when ENCRYPTION_SECRET is not set', () => {
+    const saved = process.env.ENCRYPTION_SECRET;
+    delete process.env.ENCRYPTION_SECRET;
+    try {
+      expect(() => encryptApiKey('key', 'user-1')).toThrow('ENCRYPTION_SECRET environment variable is required');
+    } finally {
+      process.env.ENCRYPTION_SECRET = saved;
+    }
   });
 });
