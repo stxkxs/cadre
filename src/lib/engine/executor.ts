@@ -1,7 +1,7 @@
 import { Graph } from './graph';
 import { Scheduler } from './scheduler';
 import { RunContext } from './context';
-import { ClaudeCodeProvider } from '../providers/claude-code';
+import { getProvider } from '../providers/registry';
 import type { WorkflowNode, RunState, ExecutionEvent } from './types';
 import { readdirSync, statSync, writeFileSync } from 'fs';
 import { join, relative } from 'path';
@@ -11,8 +11,6 @@ export interface ExecutorOptions {
   workspacePath?: string;
   onEvent?: (event: ExecutionEvent) => void;
 }
-
-const claudeCode = new ClaudeCodeProvider();
 
 export class Executor {
   private graph: Graph;
@@ -246,8 +244,10 @@ export class Executor {
 
     const systemPrompt = node.data.systemPrompt;
 
+    const provider = getProvider(node.data.provider || 'claude-code');
+
     let fullOutput = '';
-    const stream = claudeCode.stream(
+    const stream = provider.stream(
       [
         ...(systemPrompt ? [{ role: 'system' as const, content: systemPrompt }] : []),
         { role: 'user' as const, content: previousOutputs || (this.context.get('input') as string) || 'Begin' },

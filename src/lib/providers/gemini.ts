@@ -2,37 +2,29 @@ import { spawn, type ChildProcessWithoutNullStreams } from 'child_process';
 import type { CodingAgentProvider } from './base';
 import type { ProviderMessage, ProviderOptions, StreamChunk } from '@/types/provider';
 
-export class ClaudeCodeProvider implements CodingAgentProvider {
-  readonly id = 'claude-code';
-  readonly name = 'Claude Code';
+export class GeminiProvider implements CodingAgentProvider {
+  readonly id = 'gemini';
+  readonly name = 'Gemini';
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async *stream(messages: ProviderMessage[], options: ProviderOptions, _apiKey: string): AsyncGenerator<StreamChunk> {
     const prompt = this.buildPrompt(messages);
-    const workspaceEnabled = options.workspace && options.workspace !== 'off' && options.workspacePath;
 
-    const args = ['-p', '--output-format', 'json'];
+    const args = ['-p', prompt, '--output-format', 'stream-json'];
 
-    const maxTurns = options.maxTurns || 10;
-    args.push('--max-turns', String(maxTurns));
-
-    if (workspaceEnabled && options.workspace === 'full') {
-      args.push('--dangerously-skip-permissions');
+    if (options.workspace === 'full') {
+      args.push('--yolo');
     }
 
     const spawnOptions: { env: NodeJS.ProcessEnv; cwd?: string } = {
       env: process.env,
     };
 
-    if (workspaceEnabled) {
+    if (options.workspacePath) {
       spawnOptions.cwd = options.workspacePath;
     }
 
-    const proc = spawn('claude', args, spawnOptions);
-
-    // Pipe prompt via stdin to avoid ARG_MAX limits
-    proc.stdin.write(prompt);
-    proc.stdin.end();
+    const proc = spawn('gemini', args, spawnOptions);
 
     const cleanup = this.attachAbortHandler(proc, options.signal);
 
@@ -48,7 +40,7 @@ export class ClaudeCodeProvider implements CodingAgentProvider {
     proc.on('error', (err) => {
       cleanup();
       if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
-        throw new Error('Claude Code CLI not found. Install it with: npm install -g @anthropic-ai/claude-code');
+        throw new Error('Gemini CLI not found. Install it with: npm install -g @google/gemini-cli');
       }
       throw err;
     });
@@ -60,24 +52,25 @@ export class ClaudeCodeProvider implements CodingAgentProvider {
       if (stdout.trim()) {
         yield { type: 'text', content: this.parseOutput(stdout) };
       }
-      throw new Error('Claude Code was cancelled');
+      throw new Error('Gemini was cancelled');
     }
 
-    if (result.code !== 0) {
+    // Exit code 53 = turn limit exceeded — still produce output
+    if (result.code !== 0 && result.code !== 53) {
       if (stdout.trim()) {
         yield { type: 'text', content: this.parseOutput(stdout) };
       }
-      throw new Error(stderr || `Claude Code exited with code ${result.code}`);
+      throw new Error(stderr || `Gemini exited with code ${result.code}`);
     }
 
     const parsed = this.parseOutput(stdout);
     yield { type: 'text', content: parsed };
-    yield { type: 'done', content: '', tokens: { input: 0, output: 0 } };
+    yield { type: 'done', content: '', tokens: this.extractTokens(stdout) };
   }
 
   async validateCli(): Promise<boolean> {
     return new Promise((resolve) => {
-      const proc = spawn('claude', ['--version']);
+      const proc = spawn('gemini', ['--version']);
       proc.on('close', (code) => resolve(code === 0));
       proc.on('error', () => resolve(false));
     });
@@ -93,41 +86,50 @@ export class ClaudeCodeProvider implements CodingAgentProvider {
   }
 
   private parseOutput(raw: string): string {
-    const trimmed = raw.trim();
-    if (!trimmed) return '';
+    // Gemini stream-json outputs JSONL events. Extract assistant message content.
+    const lines = raw.trim().split('\n');
+    const textParts: string[] = [];
 
-    try {
-      const parsed = JSON.parse(trimmed);
-      if (typeof parsed === 'object' && parsed !== null) {
-        if (typeof parsed.result === 'string') return parsed.result;
-        if (typeof parsed.text === 'string') return parsed.text;
-        if (typeof parsed.content === 'string') return parsed.content;
-        if (Array.isArray(parsed.content)) {
-          return parsed.content
-            .filter((c: { type?: string; text?: string }) => c.type === 'text' && c.text)
-            .map((c: { text: string }) => c.text)
-            .join('');
+    for (const line of lines) {
+      try {
+        const event = JSON.parse(line);
+        // Assistant message chunks
+        if (event.type === 'message' && event.role === 'model' && typeof event.content === 'string') {
+          textParts.push(event.content);
         }
+        // Final result event may contain aggregated response
+        if (event.type === 'result' && typeof event.response === 'string') {
+          return event.response;
+        }
+      } catch {
+        if (line.trim()) textParts.push(line);
       }
-      return trimmed;
-    } catch {
-      return trimmed;
     }
+
+    return textParts.join('') || raw.trim();
+  }
+
+  private extractTokens(raw: string): { input: number; output: number } {
+    const lines = raw.trim().split('\n');
+    for (const line of lines) {
+      try {
+        const event = JSON.parse(line);
+        if (event.type === 'result' && event.stats) {
+          return {
+            input: event.stats.inputTokens || event.stats.input_tokens || 0,
+            output: event.stats.outputTokens || event.stats.output_tokens || 0,
+          };
+        }
+      } catch { /* skip */ }
+    }
+    return { input: 0, output: 0 };
   }
 
   private attachAbortHandler(proc: ChildProcessWithoutNullStreams, signal?: AbortSignal): () => void {
     if (!signal) return () => {};
-
-    if (signal.aborted) {
-      proc.kill('SIGTERM');
-      return () => {};
-    }
-
+    if (signal.aborted) { proc.kill('SIGTERM'); return () => {}; }
     const onAbort = () => { proc.kill('SIGTERM'); };
     signal.addEventListener('abort', onAbort, { once: true });
-
-    return () => {
-      signal.removeEventListener('abort', onAbort);
-    };
+    return () => { signal.removeEventListener('abort', onAbort); };
   }
 }

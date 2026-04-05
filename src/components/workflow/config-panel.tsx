@@ -53,10 +53,28 @@ export function ConfigPanel() {
           )}
         </div>
 
-        {/* Claude Code agent config */}
+        {/* Agent config */}
         {node.type === 'agent' && (
           <>
             <Separator />
+
+            {/* Provider */}
+            <div className="space-y-2">
+              <Label>Provider</Label>
+              <Select
+                value={node.data.provider || 'claude-code'}
+                onValueChange={(value) => updateNode(node.id, { provider: value } as Record<string, unknown>)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select provider" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="claude-code">Claude Code</SelectItem>
+                  <SelectItem value="codex">Codex</SelectItem>
+                  <SelectItem value="gemini">Gemini</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
             {/* System Prompt */}
             <div className="space-y-2">

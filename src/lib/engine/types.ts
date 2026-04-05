@@ -31,6 +31,8 @@ export interface WorkflowNode {
     template?: string;
     // Gate
     gateMessage?: string;
+    // Provider
+    provider?: string;
   };
 }
 
